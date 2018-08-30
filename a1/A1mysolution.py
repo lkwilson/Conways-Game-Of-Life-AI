@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import copy
-
 def removeVisitedNodes(children, expanded, unExpanded):
     """ Given a list of children, the expanded dictionary, and the unExpanded
     list of child-parent tuples, return a list of children not in expanded or
@@ -70,10 +68,6 @@ def depthFirstSearch(startState, goalState, successorsf):
     return treeSearch(startState, goalState, successorsf, False)
 
 def moveCamel(state, camel, space):
-    """
-    Moves the camel and returns the new state. Makes a copy of state before
-    returning, I think this only works when you have S, L, R as strings.
-    """
     state = list(state)
     tmp = state[camel]
     state[camel] = state[space]
@@ -116,6 +110,3 @@ def camelSuccessorsf(state, S=' ', L='L', R='R'):
     if space+2 < len(state) and state[space+2] == L:
         children.append(moveCamel(state, space+2, space))
     return children
-
-if __name__ == '__main__':
-    pass
