@@ -110,3 +110,30 @@ def camelSuccessorsf(state, S=' ', L='L', R='R'):
     if space+2 < len(state) and state[space+2] == L:
         children.append(moveCamel(state, space+2, space))
     return children
+
+
+if __name__ == "__main__":
+    R = 'R'
+    S = ' '
+    L = 'L'
+
+    def genCamelProb(n):
+        from random import getrandbits
+        ci = [L if getrandbits(1) else R for _ in range(n)]
+        from random import randint
+        ci[randint(0, n)] = S
+        cg = ci
+        ci = tuple(ci)
+        cg.sort()
+        si = cg.index(R)-1
+        cg[0] = L
+        cg[si] = S
+        cg = tuple(cg)
+        return ci, cg
+        
+    ci, cg = genCamelProb(9)
+    print(ci)
+    print(cg)
+    soln = breadthFirstSearch(ci, cg, camelSuccessorsf)
+    print(soln)
+    print(len(soln))
