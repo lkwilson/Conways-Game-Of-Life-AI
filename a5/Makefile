@@ -3,4 +3,4 @@ all:
 
 .PHONY: clean
 clean:
-	rm *csv* *zip* Readme.txt
+	rm *.csv *.zip *.txt *.R *.data
