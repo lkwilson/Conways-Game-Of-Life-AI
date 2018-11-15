@@ -1,7 +1,7 @@
 import pygame
 
 class View:
-    def __init__(self, ctrl, size, logo, title):
+    def __init__(self, ctrl, size, logo, title, fps=60):
         pygame.init()
 
         # set controller
@@ -9,12 +9,17 @@ class View:
         self.ctrl.getModel().watch(self)
 
         # build display
+        self.fps = fps
         self.size = size
         self.width, self.height = self.size
         self.screen = pygame.display.set_mode(self.size)
         pygame.display.set_icon(pygame.image.load(logo))
         pygame.display.set_caption(title)
         self.buildDisplayComponents()
+
+        # build user events
+        self.TICK_EVENT = pygame.USEREVENT + 1
+        self.setTickPeriod()
 
         # create background
         self.bg = pygame.Surface(self.screen.get_size())
@@ -47,20 +52,38 @@ class View:
     def run(self):
         ''' Starts the gui and blocks, so be careful calling this one '''
         self.running = True
-        clock = pygame.time.Clock()
+        #clock = pygame.time.Clock()
         while self.running:
-            clock.tick(self.ctrl.tickRate)
-            self.ctrl.tick()
+            #clock.tick(self.fps)
             for event in pygame.event.get():
-                self.handleEvent(event)
+                if event.type == pygame.QUIT:
+                    self.quit(event)
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    self.click(event)
+                elif event.type == pygame.KEYDOWN:
+                    self.keyDown(event)
+                elif event.type == self.TICK_EVENT:
+                    self.tick(event)
+                else:
+                    continue
             self.render()
 
+    def setTickPeriod(self):
+        if self.ctrl.playing:
+            rate = 0
+        else:
+            rate = self.ctrl.tickPeriod
+        pygame.time.set_timer(self.TICK_EVENT, rate)
+
     # RENDER
+    def tick(self, event):
+        self.ctrl.tick()
+
     def render(self):
         ''' render '''
         self.screen.blit(self.bg, (0,0))
         self.renderModel()
-        pygame.display.flip()
+        pygame.display.update()
 
     def renderModel(self):
         """ only this function reads from the model """
@@ -81,12 +104,6 @@ class View:
 
     def handleEvent(self, event):
         ''' handle events '''
-        if event.type == pygame.QUIT:
-            self.quit(event)
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            self.click(event)
-        elif event.type == pygame.KEYDOWN:
-            self.keyDown(event)
 
     def keyDown(self, event):
         key = event.key
@@ -119,9 +136,11 @@ class View:
 
     def speedUp(self, event):
         self.ctrl.speedUp()
+        self.setTickPeriod()
 
     def speedDown(self, event):
         self.ctrl.speedDown()
+        self.setTickPeriod()
 
     def playPause(self, event):
         self.ctrl.playPause()

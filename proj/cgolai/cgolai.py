@@ -28,6 +28,11 @@ class CgolAi:
         scale = 15
         size = config.get('windowSize', (boardSize[1]*scale,boardSize[0]*scale))
 
+        # ctrl config
+        self.tickPeriod = 100 # in millis
+        self.tickPeriodStep = 25
+        self.playing = False
+
         self.model = Model(
                 size=boardSize,
                 verbose=verbose,
@@ -38,10 +43,6 @@ class CgolAi:
                 logo=logo,
                 size=size,
                 )
-
-        self.tickRate = 60
-        self.tickStep = 1
-        self.playing = False
 
     def run(self):
         self.view.run()
@@ -87,9 +88,9 @@ class CgolAi:
         self.model.close()
 
     def speedUp(self):
-        self.tickRate+=self.tickStep
+        self.tickPeriod-=self.tickPeriodStep
+        if self.tickPeriod <= 0:
+            self.tickPeriod = self.tickPeriodStep
 
     def speedDown(self):
-        self.tickRate-=self.tickStep
-        if self.tickRate < 0:
-            self.tickRate = 0
+        self.tickPeriod+=self.tickPeriodStep
