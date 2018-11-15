@@ -1,3 +1,5 @@
+import os
+
 import pygame
 
 from .model import Model
@@ -5,15 +7,48 @@ from .view import View
 
 class CgolAi:
     """ This class is the controller for the gui """
-    def __init__(self, config):
-        self.model = Model(config['boardSize'])
-        self.view = View(self, config['size'], config['logo'], config['title'])
+    def __init__(self, **config):
+        """
+        Model Config:
+            boardSize
+            verbose
+
+        View Config:
+            title
+            logo
+            windowSize
+        """
+        # model config
+        boardSize = config.get('boardSize', (30, 40))
+        verbose = config.get('verbose', False)
+
+        # view config
+        title = config.get('title', "Conway's Game of Life")
+        logo = config.get('logo', os.path.join('res', 'logo.png'))
+        scale = 15
+        size = config.get('windowSize', (boardSize[1]*scale,boardSize[0]*scale))
+
+        self.model = Model(
+                size=boardSize,
+                verbose=verbose,
+                )
+        self.view = View(
+                self,
+                title=title,
+                logo=logo,
+                size=size,
+                )
+
+        self.tickRate = 60
+        self.tickStep = 1
+        self.playing = False
 
     def run(self):
         self.view.run()
 
     def tick(self):
-        print('tick')
+        if self.playing:
+            self.model.step()
 
     def getModel(self):
         return self.model
@@ -23,9 +58,12 @@ class CgolAi:
         """ coord=(x,y) in a graphics plane, origin in upper left """
         return y,x
 
-    def flipPos(self, pos):
+    def flip(self, pos):
         """ pos is (row,col) """
         self.model.flip(pos)
+
+    def clearFlip(self):
+        self.model.clearFlip()
 
     def step(self):
         self.model.step()
@@ -42,5 +80,16 @@ class CgolAi:
     def load(self):
         self.model.load() #TODO: UI or model gets file? probably UI
 
+    def playPause(self):
+        self.playing = not self.playing
+
     def close(self):
         self.model.close()
+
+    def speedUp(self):
+        self.tickRate+=self.tickStep
+
+    def speedDown(self):
+        self.tickRate-=self.tickStep
+        if self.tickRate < 0:
+            self.tickRate = 0

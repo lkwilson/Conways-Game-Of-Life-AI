@@ -1,7 +1,7 @@
 import numpy as np
 
 class Model:
-    def __init__(self, size=None, initBoard=None, record=True):
+    def __init__(self, size=None, initBoard=None, record=True, verbose=False):
         """
         Args:
             - size : (row, col) : The size of the cgol board
@@ -22,8 +22,7 @@ class Model:
         """
         if initBoard is None:
             initBoard = np.zeros(size, dtype=bool)
-        else:
-            self.size = initBoard.size
+        self.size = initBoard.shape
 
         self.base = initBoard.copy()
         self.board = initBoard.copy()
@@ -34,6 +33,9 @@ class Model:
             self.baseRecord = [self.base]
             self.boardRecord = [self.board]
 
+        self.watchers = []
+        self.verbose = verbose
+
     def flip(self, loc):
         '''
         loc : (row, col) by matrix indexing (origin is top left)
@@ -43,6 +45,12 @@ class Model:
             self.board[loc] = not self.board[loc]
         else:
             self.board[:,:] = self.board != loc
+        self.notify()
+        if self.verbose:
+            print('flipped:type(loc)', loc)
+
+    def clearFlip(self):
+        self.setBoard(self.base)
 
     def step(self, resetFlipBoard=True):
         # I wanted the step to be efficient. I used code from here:
@@ -63,6 +71,9 @@ class Model:
                 self.baseRecord.append(self.base)
                 self.boardRecord.append(self.board)
             self.index += 1
+        self.notify()
+        if self.verbose:
+            print('step:',self.index)
 
     def back(self):
         self.loadIter(self.index-1)
@@ -73,7 +84,7 @@ class Model:
         - forwards args to step if generate is True
         """
         if self.index+1>=len(self.baseRecord) and generate:
-            step.step(**args)
+            self.step(**args)
         else:
             self.loadIter(self.index+1)
 
@@ -90,9 +101,14 @@ class Model:
         self.base = self.baseRecord[n]
         self.board = self.boardRecord[n]
         self.index = n
+        self.notify()
+
+    def getCell(self, row, col):
+        return self.board[row,col]
 
     def setBoard(self, board):
         self.board[:,:] = board
+        self.notify()
 
     def getStep(self, n):
         """ get the step from n to n+1 (board[n] --step--> base[n+1]) """
@@ -123,3 +139,10 @@ class Model:
         if save:
             self.save()
         # TODO
+
+    def watch(self, obj):
+        self.watchers.append(obj)
+    
+    def notify(self):
+        for watcher in self.watchers:
+            watcher.update()
