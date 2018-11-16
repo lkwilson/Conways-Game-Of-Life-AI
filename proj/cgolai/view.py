@@ -56,6 +56,7 @@ class View:
     def init_events(self):
         self.TICK_EVENT = pygame.USEREVENT + 1
         self.set_tick_period()
+        self.print_controls()
         self.key_map = {
             pygame.K_SPACE: self.play_pause,
             pygame.K_LEFT: self.left, pygame.K_h: self.left,
@@ -75,6 +76,19 @@ class View:
             pygame.KEYDOWN: self.key_down,
             self.TICK_EVENT: self.tick,
         }
+
+    def print_controls(self):
+        print('space - play/pause')
+        print('left/h - iterate back')
+        print('right/l - iterate right')
+        print('up/k - speed up iteration')
+        print('down/j - speed down iteration')
+        print('c - clear cells')
+        print('r - reset / undo flips')
+        print('n - generate next iteration')
+        print('s - save iterations')
+        print('o - open iterations')
+        print('i - invert cells')
 
     def init_screen(self):
         self.bg = pygame.Surface(self.screen.get_size())

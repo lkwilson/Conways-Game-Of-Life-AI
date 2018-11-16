@@ -10,13 +10,13 @@ class CgolAi:
     def __init__(self, **config):
         """
         Model Config:
-            boardSize
+            board_size
             verbose
 
         View Config:
             title
             logo
-            windowSize
+            window_size
         """
         # model config
         board_size = config.get('board_size', (60, 80))
@@ -26,7 +26,7 @@ class CgolAi:
         title = config.get('title', "Conway's Game of Life")
         logo = config.get('logo', os.path.join('res', 'logo.png'))
         scale = 10
-        size = config.get('windowSize', (board_size[1]*scale, board_size[0]*scale))
+        size = config.get('window_size', (board_size[1]*scale, board_size[0]*scale))
 
         # ctrl config
         self.tick_period = 100  # in millis
@@ -44,6 +44,8 @@ class CgolAi:
             size=size,
             verbose=self.verbose,
         )
+        if config.get('print_controls', True):
+            self.view.print_controls()
 
     def run(self):
         self.view.run()
