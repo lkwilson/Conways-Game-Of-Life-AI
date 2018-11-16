@@ -1,180 +1,172 @@
 import pygame
 
+
 class View:
     def __init__(self, ctrl, size, logo, title, fps=60, verbose=False):
-        pygame.init()
+        # variables
         self.verbose = verbose
+        self.running = True
+        self.bg = None
+        self.TICK_EVENT = None
+        self.key_map = None
+        self.event_map = None
+        self.fps = None
+        self.size = None
+        self.width = None
+        self.height = None
+        self.model_update = None
+        self.screen = None
+        self.DEAD_COLOR = None
+        self.ALIVE_COLOR = None
+        self.tile_width = None
+        self.tile_height = None
+        self.ctrl = None
 
+        # init
+        self.init_controller(ctrl)
+        self.init_display(fps, logo, size, title)
+        self.init_events()
+        self.init_screen()
+
+    def init_controller(self, ctrl):
         # set controller
         self.ctrl = ctrl
-        self.ctrl.getModel().watch(self)
+        self.ctrl.get_model().watch(self)
 
-        # build display
+    def init_display(self, fps, logo, size, title):
         self.fps = fps
         self.size = size
         self.width, self.height = self.size
+        self.model_update = True
+        pygame.init()
         self.screen = pygame.display.set_mode(self.size)
         pygame.display.set_icon(pygame.image.load(logo))
         pygame.display.set_caption(title)
-        self.buildDisplayComponents()
 
-        # build events
-        self.TICK_EVENT = pygame.USEREVENT + 1
-        allowedEvents = [pygame.QUIT, pygame.KEYDOWN,
-                self.TICK_EVENT, pygame.MOUSEBUTTONDOWN]
-        #pygame.event.set_allowed(None)
-        pygame.event.set_allowed(allowedEvents)
-        self.setTickPeriod()
-        self.buildKeyMap()
-        self.buildEventMap()
-
-        # create background
-        self.bg = pygame.Surface(self.screen.get_size())
-        self.bg = self.bg.convert()
-        self.bg.fill(self.DEAD_COLOR)
-
-        # render
-        self.render()
-
-    def buildDisplayComponents(self):
         # colors
         self.DEAD_COLOR = self.color(0x67, 0xB4, 0xFF)
         self.ALIVE_COLOR = self.color(0x67, 0xFF, 0xB2)
-        #self.FLIP_COLOR = self.color()
+        # self.FLIP_COLOR = self.color()
 
         # tiles
-        modelHeight,modelWidth = self.ctrl.getModel().size
-        self.tileWidth = self.width//modelWidth
-        self.tileHeight = self.height//modelHeight
+        model_height, model_width = self.ctrl.get_model().size
+        self.tile_width = self.width // model_width
+        self.tile_height = self.height // model_height
 
-    def buildKeyMap(self):
-        # keys
-        space = 32
-        h = 104
-        j = 106
-        k = 107
-        l = 108
-        left = 276
-        up = 273
-        down = 274
-        right = 275
-        c = 99
-        f = 114
-        r = -1
-        n = -1
-        s = -1
-        o = -1
-        i = -1
-
-        # building key map
-        self.keymap = {
-            space:self.playPause,
-            left:self.left, h:self.left,
-            right:self.right, l:self.right,
-            up:self.speedUp, k:self.speedUp,
-            down:self.speedDown, j:self.speedDown,
-            c:self.clear,
-            r:self.reset,
-            n:self.next,
-            s:self.save,
-            o:self.open,
-            i:self.invert,
+    def init_events(self):
+        self.TICK_EVENT = pygame.USEREVENT + 1
+        self.set_tick_period()
+        self.key_map = {
+            pygame.K_SPACE: self.play_pause,
+            pygame.K_LEFT: self.left, pygame.K_h: self.left,
+            pygame.K_RIGHT: self.right, pygame.K_l: self.right,
+            pygame.K_UP: self.speed_up, pygame.K_k: self.speed_up,
+            pygame.K_DOWN: self.speed_down, pygame.K_j: self.speed_down,
+            pygame.K_c: self.clear,
+            pygame.K_r: self.reset,
+            pygame.K_n: self.step,
+            pygame.K_s: self.save,
+            pygame.K_o: self.open,
+            pygame.K_i: self.invert,
+        }
+        self.event_map = {
+            pygame.QUIT: self.quit,
+            pygame.MOUSEBUTTONDOWN: self.click,
+            pygame.KEYDOWN: self.key_down,
+            self.TICK_EVENT: self.tick,
         }
 
-    def buildEventMap(self):
-        self.eventMap = {
-            pygame.QUIT:self.quit,
-            pygame.MOUSEBUTTONDOWN:self.click,
-            pygame.KEYDOWN:self.keyDown,
-            self.TICK_EVENT:self.tick,
-        }
+    def init_screen(self):
+        self.bg = pygame.Surface(self.screen.get_size())
+        self.bg = self.bg.convert()
+        self.bg.fill(self.DEAD_COLOR)
+        self.render()
 
-    def color(self, r=0, g=0, b=0, a=None):
-        ''' A color building method
+    @staticmethod
+    def color(r=0, g=0, b=0, a=None):
+        """ A color building method
 
         arg types are integer: 0-256
-        '''
-        if a:
-            return (r, g, b, a)
+        """
+        if a is None:
+            return r, g, b
         else:
-            return (r, g, b)
+            return r, g, b, a
 
     def run(self):
-        ''' Starts the gui and blocks, so be careful calling this one '''
-        self.running = True
+        """ Starts the gui and blocks, so be careful calling this one """
         while self.running:
             event = pygame.event.wait()
-            self.log('event:',event)
-            self.handleEvent(event)
-            for event in pygame.event.get(): # handle overflow
-                self.handleEvent(event)
-                self.log('overflow event:',event)
-            if self.rerender:
+            self.log('event:', event)
+            self.handle_event(event)
+            for event in pygame.event.get():
+                self.handle_event(event)
+                self.log('overflow event:', event)
+            if self.model_update:
                 self.render()
                 self.log('render')
-
-    def setTickPeriod(self):
-        if self.ctrl.ticking:
-            pygame.time.set_timer(self.TICK_EVENT, self.ctrl.tickPeriod)
-        else:
-            pygame.time.set_timer(self.TICK_EVENT, 0)
-        self.rerender = True
-
-    # RENDER
-    def tick(self, event):
-        self.ctrl.tick()
-
-    def render(self):
-        ''' render '''
-        self.screen.blit(self.bg, (0,0))
-        self.renderModel()
-        pygame.display.update()
-
-    def renderModel(self):
-        """ only this function reads from the model """
-        model = self.ctrl.getModel()
-        for row in range(model.size[0]):
-            for col in range(model.size[1]):
-                if model.getCell(row, col):
-                    xpos = col*self.tileWidth
-                    ypos = (model.size[0]-1-row)*self.tileHeight
-                    pygame.draw.rect(self.screen,
-                            self.ALIVE_COLOR,
-                            [xpos, ypos, self.tileWidth, self.tileHeight])
-
-    # EVENT HANDLERS
-    def update(self):
-        ''' The model has been updated, and game needs to reflect that '''
-        self.rerender = True
 
     def log(self, *args, **kwargs):
         if self.verbose:
             print(*args, **kwargs)
 
-    def handleEvent(self, event):
-        ''' handle events '''
-        if event.type in self.eventMap:
-            self.eventMap[event.type](event)
-
-    def keyDown(self, event):
-        # handle event
-        key = event.key
-        if key in keymap:
-            self.keymap[key](event)
+    def set_tick_period(self):
+        if self.ctrl.ticking:
+            pygame.time.set_timer(self.TICK_EVENT, self.ctrl.tick_period)
         else:
-            self.log('key:',key)
+            pygame.time.set_timer(self.TICK_EVENT, 0)
+        self.model_update = True
 
-    def speedUp(self, event):
-        self.ctrl.speedUp()
-        self.setTickPeriod()
+    def tick(self, event):
+        self.ctrl.tick()
 
-    def speedDown(self, event):
-        self.ctrl.speedDown()
-        self.setTickPeriod()
+    def update(self):
+        """ The model has been updated, and game needs to reflect that """
+        self.model_update = True
 
-    def playPause(self, event):
-        self.ctrl.playPause()
-        self.setTickPeriod()
+    def handle_event(self, event):
+        """ handle events """
+        if event.type in self.event_map:
+            self.event_map[event.type](event)
+
+    def key_down(self, event):
+        self.key_map.get(event.key, self.unhandled_key)(event)
+
+    def unhandled_key(self, event):
+        self.log('unhandled key:', event)
+
+    # RENDER
+    def render(self):
+        """ render """
+        self.screen.blit(self.bg, (0, 0))
+        self.render_model()
+        pygame.display.update()
+        self.model_update = False
+
+    def render_model(self):
+        """ only this function reads from the model """
+        model = self.ctrl.get_model()
+        for row in range(model.size[0]):
+            for col in range(model.size[1]):
+                if model.get_cell(row, col):
+                    xpos = col*self.tile_width
+                    ypos = (model.size[0]-1-row)*self.tile_height
+                    pygame.draw.rect(self.screen,
+                                     self.ALIVE_COLOR,
+                                     [xpos, ypos, self.tile_width, self.tile_height])
+
+    # EVENT HANDLERS
+    def speed_up(self, event):
+        self.ctrl.speed_up()
+        self.set_tick_period()
+
+    def speed_down(self, event):
+        self.ctrl.speed_down()
+        self.set_tick_period()
+
+    def play_pause(self, event):
+        self.ctrl.play_pause()
+        self.set_tick_period()
 
     def clear(self, event):
         self.ctrl.clear()
@@ -190,10 +182,10 @@ class View:
         self.ctrl.back()
 
     def click(self, event):
-        model = self.ctrl.getModel()
-        col,row = event.pos
-        row //= self.tileHeight
-        col //= self.tileWidth
+        model = self.ctrl.get_model()
+        col, row = event.pos
+        row //= self.tile_height
+        col //= self.tile_width
         pos = (model.size[0]-1-row, col)
         self.ctrl.flip(pos)
 
@@ -201,16 +193,15 @@ class View:
         self.ctrl.step()
 
     def reset(self, event):
-        self.ctrl.clearFlip()
-
-    def save(self, event):
-        pass
-
-    def open(self, event):
-        pass
+        self.ctrl.clear_flip()
 
     def invert(self, event):
-        pass
+        self.ctrl.invert()
 
-    def next(self, event):
-        pass
+    def save(self, event):
+        # TODO: get filename
+        self.ctrl.save()
+
+    def open(self, event):
+        # TODO: get filename
+        self.ctrl.load()

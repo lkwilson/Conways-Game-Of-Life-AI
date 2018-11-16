@@ -19,56 +19,56 @@ class CgolAi:
             windowSize
         """
         # model config
-        boardSize = config.get('boardSize', (60, 80))
+        board_size = config.get('board_size', (60, 80))
         self.verbose = config.get('verbose', False)
 
         # view config
         title = config.get('title', "Conway's Game of Life")
         logo = config.get('logo', os.path.join('res', 'logo.png'))
         scale = 10
-        size = config.get('windowSize', (boardSize[1]*scale,boardSize[0]*scale))
+        size = config.get('windowSize', (board_size[1]*scale, board_size[0]*scale))
 
         # ctrl config
-        self.tickPeriod = 100 # in millis
-        self.tickPeriodStep = 10
+        self.tick_period = 100  # in millis
+        self.tick_period_step = 10
         self.ticking = False
 
         self.model = Model(
-                size=boardSize,
-                verbose=self.verbose,
-                )
+            size=board_size,
+            verbose=self.verbose,
+        )
         self.view = View(
-                self,
-                title=title,
-                logo=logo,
-                size=size,
-                verbose=self.verbose,
-                )
+            self,
+            title=title,
+            logo=logo,
+            size=size,
+            verbose=self.verbose,
+        )
 
     def run(self):
         self.view.run()
 
-    def tick(self):
-        if self.verbose: print('model tick')
-        self.model.step()
+    def log(self, *args, **kwargs):
+        if self.verbose:
+            print(*args, **kwargs)
 
-    def getModel(self):
+    def tick(self):
+        self.log('model tick')
+        self.step()
+
+    def get_model(self):
         return self.model
 
-    # Model facade (for UI)
-    def XYToRowCol(self, coord):
-        """ coord=(x,y) in a graphics plane, origin in upper left """
-        return y,x
-
+    # model facade
     def flip(self, pos):
         """ pos is (row,col) """
         self.model.flip(pos)
 
-    def clearFlip(self):
-        self.model.clearFlip()
+    def clear_flip(self):
+        self.model.clear_flip()
 
     def clear(self):
-        self.model.clearBoard()
+        self.model.clear_board()
 
     def step(self):
         self.model.step()
@@ -79,26 +79,29 @@ class CgolAi:
     def forward(self):
         self.model.forward()
 
-    def save(self):
-        self.model.save()
+    def save(self, filename=None):
+        self.model.save(filename)
 
-    def load(self):
-        self.model.load() #TODO: UI or model gets file? probably UI
+    def load(self, filename=None):
+        self.model.load(filename)
 
-    def playPause(self):
+    def play_pause(self):
         self.ticking = not self.ticking
 
     def close(self):
         self.model.close()
 
-    def speedUp(self):
-        self.tickPeriod-=self.tickPeriodStep
-        if self.tickPeriod < 0:
-            self.tickPeriod = 0
-        if self.ticking:
+    def speed_up(self):
+        self.tick_period -= self.tick_period_step
+        if self.tick_period <= 0:
+            self.tick_period = self.tick_period_step
+        if self.ticking:  # it looks better
             self.tick()
 
-    def speedDown(self):
-        self.tickPeriod+=self.tickPeriodStep
-        if self.ticking:
+    def invert(self):
+        self.model.invert()
+
+    def speed_down(self):
+        self.tick_period += self.tick_period_step
+        if self.ticking:  # it looks better
             self.tick()

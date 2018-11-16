@@ -71,13 +71,13 @@ class testTest(unittest.TestCase):
         flip[9,3] = True
 
         model.flip(flip)
-        self.assertTrue(np.all(model.getFlipMap(0) == flip))
+        self.assertTrue(np.all(model.get_flip_map(0) == flip))
 
     def testGetStep(self):
         model = Model((10, 10))
 
-        initBase = model.baseRecord[-1]
-        initBoard = model.boardRecord[-1]
+        initBase = model.base_record[-1]
+        initBoard = model.board_record[-1]
 
         flip = np.zeros((10, 10), dtype=bool)
         flip[0:2,3] = True
@@ -85,11 +85,11 @@ class testTest(unittest.TestCase):
 
         model.flip(flip)
 
-        self.assertTrue(model.getFlip(0)[0] is initBase)
-        self.assertTrue(model.getFlip(0)[1] is initBoard)
+        self.assertTrue(model.get_flip(0)[0] is initBase)
+        self.assertTrue(model.get_flip(0)[1] is initBoard)
         model.step()
-        self.assertTrue(np.all(model.getFlip(0)[0] == initBase))
-        self.assertTrue(model.getFlip(0)[1] is initBoard)
+        self.assertTrue(np.all(model.get_flip(0)[0] == initBase))
+        self.assertTrue(model.get_flip(0)[1] is initBoard)
 
         midBoard = model.board
         midBase = model.base
@@ -97,8 +97,8 @@ class testTest(unittest.TestCase):
         model.flip(flip)
         model.step()
 
-        self.assertTrue(model.getFlip(1)[0] is midBase)
-        self.assertTrue(model.getFlip(1)[1] is midBoard)
+        self.assertTrue(model.get_flip(1)[0] is midBase)
+        self.assertTrue(model.get_flip(1)[1] is midBoard)
 
     def testLoadIter(self):
         model = Model((10, 10))
@@ -120,7 +120,7 @@ class testTest(unittest.TestCase):
         model.step()
         model.flip(flip)
         model.step()
-        model.loadIter(1)
+        model.load_iter(1)
         self.assertTrue(model.base is midBase)
         self.assertTrue(model.board is midBoard)
 
@@ -135,5 +135,5 @@ class testTest(unittest.TestCase):
         flip[9,3] = True
 
         model.flip(flip)
-        self.assertTrue(model.base is model.baseRecord[0])
-        self.assertTrue(model.board is model.boardRecord[0])
+        self.assertTrue(model.base is model.base_record[0])
+        self.assertTrue(model.board is model.board_record[0])

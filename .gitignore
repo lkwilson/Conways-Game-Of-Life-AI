@@ -5,3 +5,4 @@ __pycache__/
 notebookcode.py
 *.tar
 play/
+.idea/
