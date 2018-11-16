@@ -56,7 +56,6 @@ class View:
     def init_events(self):
         self.TICK_EVENT = pygame.USEREVENT + 1
         self.set_tick_period()
-        self.print_controls()
         self.key_map = {
             pygame.K_SPACE: self.play_pause,
             pygame.K_LEFT: self.left, pygame.K_h: self.left,
