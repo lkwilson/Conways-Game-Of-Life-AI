@@ -5,7 +5,7 @@ import os
 from cgolai import CgolAi
 
 def main():
-    sys = CgolAi()
+    sys = CgolAi(verbose=True)
     sys.run()
 
 if __name__ == "__main__":

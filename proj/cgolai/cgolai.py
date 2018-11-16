@@ -19,37 +19,38 @@ class CgolAi:
             windowSize
         """
         # model config
-        boardSize = config.get('boardSize', (30, 40))
-        verbose = config.get('verbose', False)
+        boardSize = config.get('boardSize', (60, 80))
+        self.verbose = config.get('verbose', False)
 
         # view config
         title = config.get('title', "Conway's Game of Life")
         logo = config.get('logo', os.path.join('res', 'logo.png'))
-        scale = 15
+        scale = 10
         size = config.get('windowSize', (boardSize[1]*scale,boardSize[0]*scale))
 
         # ctrl config
         self.tickPeriod = 100 # in millis
-        self.tickPeriodStep = 25
-        self.playing = False
+        self.tickPeriodStep = 10
+        self.ticking = False
 
         self.model = Model(
                 size=boardSize,
-                verbose=verbose,
+                verbose=self.verbose,
                 )
         self.view = View(
                 self,
                 title=title,
                 logo=logo,
                 size=size,
+                verbose=self.verbose,
                 )
 
     def run(self):
         self.view.run()
 
     def tick(self):
-        if self.playing:
-            self.model.step()
+        if self.verbose: print('model tick')
+        self.model.step()
 
     def getModel(self):
         return self.model
@@ -65,6 +66,9 @@ class CgolAi:
 
     def clearFlip(self):
         self.model.clearFlip()
+
+    def clear(self):
+        self.model.clearBoard()
 
     def step(self):
         self.model.step()
@@ -82,15 +86,19 @@ class CgolAi:
         self.model.load() #TODO: UI or model gets file? probably UI
 
     def playPause(self):
-        self.playing = not self.playing
+        self.ticking = not self.ticking
 
     def close(self):
         self.model.close()
 
     def speedUp(self):
         self.tickPeriod-=self.tickPeriodStep
-        if self.tickPeriod <= 0:
-            self.tickPeriod = self.tickPeriodStep
+        if self.tickPeriod < 0:
+            self.tickPeriod = 0
+        if self.ticking:
+            self.tick()
 
     def speedDown(self):
         self.tickPeriod+=self.tickPeriodStep
+        if self.ticking:
+            self.tick()

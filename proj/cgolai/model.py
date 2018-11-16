@@ -106,6 +106,9 @@ class Model:
     def getCell(self, row, col):
         return self.board[row,col]
 
+    def clearBoard(self):
+        self.setBoard(False)
+
     def setBoard(self, board):
         self.board[:,:] = board
         self.notify()
