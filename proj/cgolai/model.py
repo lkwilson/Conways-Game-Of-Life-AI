@@ -2,12 +2,21 @@ import numpy as np
 
 
 class Model:
-    def __init__(self, size=None, init_board=None, record=True, verbose=False):
+    def __init__(self, size=None, init_board=None, record=True, verbose=False,
+            filename=None):
         """
         Args:
             - size : (row, col) : The size of the cgol board
-            - initBoard : np.array : The cgol board (to copy)
+            - init_board : np.array : The cgol board (to copy)
             - record : bool : If the model should record game states
+            - verbose : bool : If logging should be printed
+            - filename : str : A file to load
+
+        File IO:
+            If a filename is specified, then it will be used to store
+            recordings when save is called. It will also load what's in the
+            file on initialization. If the file doesn't exist, then it's not
+            loaded nor is it created until the first save is called.
 
         Recording:
             Recording records the board states in baseRecord and boardRecord.

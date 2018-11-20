@@ -12,9 +12,11 @@ class CgolAi:
         Model Config:
             board_size
             verbose
+            filename
 
         View Config:
             title
+            verbose
             logo
             window_size
         """
@@ -25,6 +27,7 @@ class CgolAi:
         # model config
         board_size = config.get('board_size', (60, 80))
         self.verbose = config.get('verbose', False)
+        filename = config.get('filename', None)
 
         # view config
         title = config.get('title', "Conway's Game of Life")
@@ -40,6 +43,7 @@ class CgolAi:
         self.model = Model(
             size=board_size,
             verbose=self.verbose,
+            filename=filename,
         )
         self.view = View(
             self,
@@ -48,7 +52,7 @@ class CgolAi:
             size=size,
             verbose=self.verbose,
         )
-        if config.get('print_controls', True):
+        if config.get('print_controls', False):
             self.view.print_controls()
 
     def run(self):
