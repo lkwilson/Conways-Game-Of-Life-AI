@@ -1,10 +1,11 @@
 import os
+import pkg_resources
 
 from .model import Model
 from .view import View
 
 
-class CgolAi:
+class Cgol:
     """ This class is the controller for the gui """
     def __init__(self, **config):
         """
@@ -30,7 +31,9 @@ class CgolAi:
 
         # view config
         title = config.get('title', "Conway's Game of Life")
-        logo = config.get('logo', os.path.join('res', 'logo.png'))
+        logo_path = os.path.join('res', 'logo.png')
+        logo_path = pkg_resources.resource_filename('cgolai', logo_path)
+        logo = config.get('logo', logo_path)
         scale = 10
         size = config.get('window_size', (board_size[1]*scale, board_size[0]*scale))
 

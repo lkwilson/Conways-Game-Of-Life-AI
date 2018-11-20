@@ -1,12 +1,14 @@
+
+
 .PHONY: test run
 run:
-	python3 -m cgolai
+	cd src && python3 -m cgolai.cgol
 
 debug:
-	python3 -m cgolai -vc
+	cd src && python3 -m cgolai.cgol -vc
 
-debugf: # this is to test debugging with a file
-	python3 -m cgolai -cvf data/debug_file
+debugf:
+	cd src && python3 -m cgolai.cgol -cvf data/debug_file
 
 test:
-	python3 -m unittest discover
+	python3 -m unittest discover -s src

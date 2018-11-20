@@ -1,7 +1,7 @@
 import sys
 import getopt
 
-from cgolai import CgolAi
+from cgolai.cgol import Cgol
 
 
 def _print_opts():
@@ -45,5 +45,5 @@ if __name__ == "__main__":
         '-f': ('filename', ),
     }
     config = _parse_args(config_opts, config_defaults)
-    system = CgolAi(**config)
+    system = Cgol(**config)
     system.run()

@@ -40,7 +40,8 @@ class View:
         self.model_update = True
         pygame.init()
         self.screen = pygame.display.set_mode(self.size)
-        pygame.display.set_icon(pygame.image.load(logo))
+        if logo:
+            pygame.display.set_icon(pygame.image.load(logo))
         pygame.display.set_caption(title)
 
         # colors
