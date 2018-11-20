@@ -71,7 +71,9 @@ class View:
         }
         self.event_map = {
             pygame.QUIT: self.quit,
-            pygame.MOUSEBUTTONDOWN: self.click,
+            pygame.MOUSEBUTTONUP: self.click_up,
+            pygame.MOUSEBUTTONDOWN: self.click_down,
+            pygame.MOUSEMOTION: self.drag,
             pygame.KEYDOWN: self.key_down,
             self.TICK_EVENT: self.tick,
         }
@@ -110,11 +112,11 @@ class View:
         """ Starts the gui and blocks, so be careful calling this one """
         while self.running:
             event = pygame.event.wait()
-            self.log('event:', event)
-            self.handle_event(event)
+            if not self.handle_event(event):
+                self.log('event:', event)
             for event in pygame.event.get():
-                self.handle_event(event)
-                self.log('overflow event:', event)
+                if not self.handle_event(event):
+                    self.log('overflow event:', event)
             if self.model_update:
                 self.render()
                 self.log('render')
@@ -141,12 +143,22 @@ class View:
         """ handle events """
         if event.type in self.event_map:
             self.event_map[event.type](event)
+            return True
+        else:
+            return False
 
     def key_down(self, event):
         self.key_map.get(event.key, self.unhandled_key)(event)
 
     def unhandled_key(self, event):
         self.log('unhandled key:', event)
+
+    def get_pos(self, pos):
+        model = self.ctrl.get_model()
+        col, row = pos
+        row //= self.tile_height
+        col //= self.tile_width
+        return model.size[0]-1-row, col
 
     # RENDER
     def render(self):
@@ -194,13 +206,16 @@ class View:
     def left(self, event):
         self.ctrl.back()
 
-    def click(self, event):
-        model = self.ctrl.get_model()
-        col, row = event.pos
-        row //= self.tile_height
-        col //= self.tile_width
-        pos = (model.size[0]-1-row, col)
-        self.ctrl.flip(pos)
+    def click_down(self, event):
+        pos = self.get_pos(event.pos)
+        self.ctrl.start_drag(pos)
+
+    def drag(self, event):
+        pos = self.get_pos(event.pos)
+        self.ctrl.drag(pos)
+
+    def click_up(self, event):
+        self.ctrl.end_drag(self.get_pos(event.pos))
 
     def step(self, event):
         self.ctrl.step()

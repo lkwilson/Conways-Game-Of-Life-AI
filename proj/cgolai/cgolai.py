@@ -18,6 +18,10 @@ class CgolAi:
             logo
             window_size
         """
+        # variables
+        self.clickPos = None
+        self.clickDrawPoses = None
+
         # model config
         board_size = config.get('board_size', (60, 80))
         self.verbose = config.get('verbose', False)
@@ -93,15 +97,31 @@ class CgolAi:
     def close(self):
         self.model.close()
 
+    def invert(self):
+        self.model.invert()
+
+    def start_drag(self, pos):
+        self.clickPos = pos
+        self.flip(self.clickPos)
+        self.clickDrawPoses = {pos}
+
+    def drag(self, pos):
+        if self.clickPos is not None and pos not in self.clickDrawPoses:
+            self.clickDrawPoses.add(pos)
+
+    def end_drag(self, pos):
+        self.clickDrawPoses.discard(self.clickPos)
+        for pos in self.clickDrawPoses:
+            self.flip(pos)
+        self.clickPos = None
+        self.clickDrawPoses = None
+
     def speed_up(self):
         self.tick_period -= self.tick_period_step
         if self.tick_period <= 0:
             self.tick_period = self.tick_period_step
         if self.ticking:  # it looks better
             self.tick()
-
-    def invert(self):
-        self.model.invert()
 
     def speed_down(self):
         self.tick_period += self.tick_period_step
