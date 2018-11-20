@@ -36,8 +36,8 @@ class CgolAi:
         size = config.get('window_size', (board_size[1]*scale, board_size[0]*scale))
 
         # ctrl config
-        self.tick_period = 100  # in millis
-        self.tick_period_step = 10
+        self.tick_period = 75  # in millis
+        self.tick_period_step = 25
         self.ticking = False
 
         self.model = Model(
@@ -56,7 +56,11 @@ class CgolAi:
             self.view.print_controls()
 
     def run(self):
-        self.view.run()
+        try:
+            self.view.run()
+        except Exception:
+            self.close()
+            raise
 
     def log(self, *args, **kwargs):
         if self.verbose:
@@ -89,17 +93,14 @@ class CgolAi:
     def forward(self):
         self.model.forward()
 
-    def save(self, filename=None):
-        self.model.save(filename)
+    def save(self):
+        self.model.save()
 
-    def load(self, filename=None):
-        self.model.load(filename)
+    def load(self):
+        self.model.load()
 
     def play_pause(self):
         self.ticking = not self.ticking
-
-    def close(self):
-        self.model.close()
 
     def invert(self):
         self.model.invert()
@@ -114,6 +115,7 @@ class CgolAi:
             self.clickDrawPoses.add(pos)
 
     def end_drag(self, pos):
+        self.clickDrawPoses.add(pos)
         self.clickDrawPoses.discard(self.clickPos)
         for pos in self.clickDrawPoses:
             self.flip(pos)
@@ -121,13 +123,15 @@ class CgolAi:
         self.clickDrawPoses = None
 
     def speed_up(self):
+        self.tick_period += self.tick_period_step
+        if self.ticking:  # it looks better
+            self.tick()
+        self.log('tick_rate:', self.tick_period)
+
+    def speed_down(self):
         self.tick_period -= self.tick_period_step
         if self.tick_period <= 0:
             self.tick_period = self.tick_period_step
         if self.ticking:  # it looks better
             self.tick()
-
-    def speed_down(self):
-        self.tick_period += self.tick_period_step
-        if self.ticking:  # it looks better
-            self.tick()
+        self.log('tick_rate:', self.tick_period)

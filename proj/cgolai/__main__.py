@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 from cgolai import CgolAi
-import sys, getopt
+import sys
+import getopt
 
 def print_opts():
     print('-v - verbosity')

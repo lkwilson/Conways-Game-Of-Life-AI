@@ -155,13 +155,8 @@ class Model:
     def invert(self):
         self.flip(np.ones(self.size, dtype=bool))
 
-    def save(self, filename):
-        pass  # TODO
+    def save(self):
+        pass  # TODO: save
 
-    def load(self, filename):
-        pass  # TODO
-
-    def close(self, save=False):
-        if save:
-            self.save()
-        # TODO
+    def load(self):
+        pass  # TODO: load custom files
