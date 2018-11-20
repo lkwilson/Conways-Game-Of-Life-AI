@@ -1,7 +1,7 @@
 import sys
 import getopt
 
-from .cgolai import CgolAi
+from cgolai import CgolAi
 
 
 def _print_opts():
