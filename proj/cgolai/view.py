@@ -75,6 +75,7 @@ class View:
             pygame.MOUSEBUTTONDOWN: self.click_down,
             pygame.MOUSEMOTION: self.drag,
             pygame.KEYDOWN: self.key_down,
+            pygame.ACTIVEEVENT: self.active,
             self.TICK_EVENT: self.tick,
         }
 
@@ -120,7 +121,6 @@ class View:
                     self.log('overflow event:', event)
             if self.model_update:
                 self.render()
-                self.log('render')
 
     def log(self, *args, **kwargs):
         if self.verbose:
@@ -141,12 +141,21 @@ class View:
         self.model_update = True
 
     def handle_event(self, event):
-        """ handle events """
+        """ handle events
+
+        event handling doesn't have an un caught event handler function because
+        there wasn't really a way to pass whether it was an overflow event or
+        not.
+        """
         if event.type in self.event_map:
             self.event_map[event.type](event)
             return True
         else:
             return False
+
+    def active(self, event):
+        if event.gain:
+            self.render()
 
     def key_down(self, event):
         self.key_map.get(event.key, self.unhandled_key)(event)
@@ -168,6 +177,7 @@ class View:
         self.render_model()
         pygame.display.update()
         self.model_update = False
+        self.log('render')
 
     def render_model(self):
         """ only this function reads from the model """
@@ -178,8 +188,8 @@ class View:
                     xpos = col*self.tile_width
                     ypos = (model.size[0]-1-row)*self.tile_height
                     pygame.draw.rect(self.screen,
-                                     self.ALIVE_COLOR,
-                                     [xpos, ypos, self.tile_width, self.tile_height])
+                            self.ALIVE_COLOR,
+                            [xpos, ypos, self.tile_width, self.tile_height])
 
     # EVENT HANDLERS
     def speed_up(self, event):
@@ -228,9 +238,7 @@ class View:
         self.ctrl.invert()
 
     def save(self, event):
-        # TODO: get filename
         self.ctrl.save()
 
     def open(self, event):
-        # TODO: get filename
         self.ctrl.load()
