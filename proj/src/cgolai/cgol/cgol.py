@@ -39,7 +39,7 @@ class Cgol:
 
         # ctrl config
         self.tick_period_min = 1  # in millis
-        self.tick_period = 75
+        self.tick_period = 150
         self.tick_period_step = 25
         self.ticking = False
 
