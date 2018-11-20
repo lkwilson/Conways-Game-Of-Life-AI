@@ -79,7 +79,8 @@ class View:
             self.TICK_EVENT: self.tick,
         }
 
-    def print_controls(self):
+    @staticmethod
+    def print_controls():
         print('click/drag - revive/kill cells')
         print('space - play/pause')
         print('left/h - iterate back')
@@ -93,12 +94,6 @@ class View:
         print('o - open iterations')
         print('i - invert cells')
 
-    def init_screen(self):
-        self.bg = pygame.Surface(self.screen.get_size())
-        self.bg = self.bg.convert()
-        self.bg.fill(self.DEAD_COLOR)
-        self.render()
-
     @staticmethod
     def color(r=0, g=0, b=0, a=None):
         """ A color building method
@@ -109,6 +104,12 @@ class View:
             return r, g, b
         else:
             return r, g, b, a
+
+    def init_screen(self):
+        self.bg = pygame.Surface(self.screen.get_size())
+        self.bg = self.bg.convert()
+        self.bg.fill(self.DEAD_COLOR)
+        self.render()
 
     def run(self):
         """ Starts the gui and blocks, so be careful calling this one """

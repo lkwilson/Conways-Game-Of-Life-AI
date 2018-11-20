@@ -1,9 +1,8 @@
 import os
 
-import pygame
-
 from .model import Model
 from .view import View
+
 
 class CgolAi:
     """ This class is the controller for the gui """
@@ -36,7 +35,8 @@ class CgolAi:
         size = config.get('window_size', (board_size[1]*scale, board_size[0]*scale))
 
         # ctrl config
-        self.tick_period = 75  # in millis
+        self.tick_period_min = 1  # in millis
+        self.tick_period = 75
         self.tick_period_step = 25
         self.ticking = False
 
@@ -119,15 +119,17 @@ class CgolAi:
         self.clickDrawPoses = None
 
     def speed_up(self):
-        self.tick_period += self.tick_period_step
+        self.tick_period -= self.tick_period_step
+        if self.tick_period < self.tick_period_min:
+            self.tick_period = self.tick_period_min
         if self.ticking:  # it looks better
             self.tick()
         self.log('tick_rate:', self.tick_period)
 
     def speed_down(self):
-        self.tick_period -= self.tick_period_step
-        if self.tick_period <= 0:
-            self.tick_period = self.tick_period_step
+        if self.tick_period == self.tick_period_min:
+            self.tick_period = 0
+        self.tick_period += self.tick_period_step
         if self.ticking:  # it looks better
             self.tick()
         self.log('tick_rate:', self.tick_period)
