@@ -56,11 +56,7 @@ class CgolAi:
             self.view.print_controls()
 
     def run(self):
-        try:
-            self.view.run()
-        except Exception:
-            self.close()
-            raise
+        self.view.run()
 
     def log(self, *args, **kwargs):
         if self.verbose:
