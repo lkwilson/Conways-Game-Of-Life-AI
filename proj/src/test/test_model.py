@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from cgolai import Model
+from cgolai.cgol import Model
 
 class testTest(unittest.TestCase):
     def testBool(self):
