@@ -79,6 +79,7 @@ class View:
         }
 
     def print_controls(self):
+        print('click/drag - revive/kill cells')
         print('space - play/pause')
         print('left/h - iterate back')
         print('right/l - iterate right')
