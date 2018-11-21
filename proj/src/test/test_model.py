@@ -1,3 +1,4 @@
+import os
 import unittest
 import numpy as np
 
@@ -5,139 +6,149 @@ from cgolai.cgol import Model
 
 
 class TestModel(unittest.TestCase):
+    def setUp(self):
+        self.filename = os.path.join('src', 'test', 'test.dat')
+        self.model = Model(size=(10, 10))
+        self.model2 = Model(size=(10, 10))
+        self.flip = np.zeros((10, 10), dtype=bool)
+
+    def tearDown(self):
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+
     def test_bool(self):
-        model = Model((10, 10))
         flip = np.zeros((10, 10), dtype=bool)
         flip[1:4, 3] = True
-        model.flip(flip)
-        model.step()
-        self.assertTrue(np.all(model.board[2, 2:4]))
-        model.step()
-        self.assertTrue(np.all(model.board[1:4, 3]))
+        self.model.flip(flip)
+        self.model.step()
+        self.assertTrue(np.all(self.model.board[2, 2:4]))
+        self.model.step()
+        self.assertTrue(np.all(self.model.board[1:4, 3]))
 
     def test_board_vs_base(self):
-        model = Model((10, 10))
-        self.assertTrue(model.base is not model.board)
-        self.assertTrue(model.base[0] is not model.board[0])
+        self.assertTrue(self.model.base is not self.model.board)
+        self.assertTrue(self.model.base[0] is not self.model.board[0])
 
-        flip = np.zeros((10, 10), dtype=bool)
-        flip[1:4, 3] = True
-        model.flip(flip)
-        self.assertTrue(model.base is not model.board)
-        self.assertTrue(model.base[0] is not model.board[0])
+        self.model.flip(self.flip)
+        self.assertTrue(self.model.base is not self.model.board)
+        self.assertTrue(self.model.base[0] is not self.model.board[0])
 
     def test_bool_flip(self):
-        model = Model((10, 10))
         flip = np.zeros((10, 10), dtype=bool)
         flip[0:2, 3] = True
         flip[9, 3] = True
-        model.flip(flip)
-        model.step()
-        self.assertTrue(np.all(model.board[0, 2:5]))
+        self.model.flip(flip)
+        self.model.step()
+        self.assertTrue(np.all(self.model.board[0, 2:5]))
 
     def test_flip_base_const(self):
-        model = Model((10, 10))
-
-        flip = np.zeros((10, 10), dtype=bool)
-        flip[0:2, 3] = True
-        flip[9, 3] = True
-
-        before_base = model.base.copy()
-        model.flip(flip)
-        after_base = model.base
+        before_base = self.model.base.copy()
+        self.model.flip(self.flip)
+        after_base = self.model.base
         
         self.assertTrue(np.all(before_base == after_base))
 
     def test_flip_in_place(self):
-        model = Model((10, 10))
-
-        flip = np.zeros((10, 10), dtype=bool)
-        flip[0:2, 3] = True
-        flip[9, 3] = True
-
-        before_base = model.base
-        before_board = model.board
-        model.flip(flip)
-        after_base = model.base
-        after_board = model.board
+        before_base = self.model.base
+        before_board = self.model.board
+        self.model.flip(self.flip)
+        after_base = self.model.base
+        after_board = self.model.board
         
         self.assertTrue(before_base is after_base)
         self.assertTrue(before_board is after_board)
 
     def test_flip_map(self):
-        model = Model((10, 10))
-
-        flip = np.zeros((10, 10), dtype=bool)
-        flip[0:2, 3] = True
-        flip[9, 3] = True
-
-        model.flip(flip)
-        self.assertTrue(np.all(model.get_flip_map(0) == flip))
+        self.model.flip(self.flip)
+        self.assertTrue(np.all(self.model.get_flip_map(0) == self.flip))
 
     def test_get_step(self):
-        model = Model((10, 10))
+        init_base = self.model.base_record[-1]
+        init_board = self.model.board_record[-1]
 
-        init_base = model.base_record[-1]
-        init_board = model.board_record[-1]
+        self.model.flip(self.flip)
 
-        flip = np.zeros((10, 10), dtype=bool)
-        flip[0:2, 3] = True
-        flip[9, 3] = True
+        self.assertTrue(self.model.get_flip(0)[0] is init_base)
+        self.assertTrue(self.model.get_flip(0)[1] is init_board)
+        self.model.step()
+        self.assertTrue(np.all(self.model.get_flip(0)[0] == init_base))
+        self.assertTrue(self.model.get_flip(0)[1] is init_board)
 
-        model.flip(flip)
+        mid_board = self.model.board
+        mid_base = self.model.base
 
-        self.assertTrue(model.get_flip(0)[0] is init_base)
-        self.assertTrue(model.get_flip(0)[1] is init_board)
-        model.step()
-        self.assertTrue(np.all(model.get_flip(0)[0] == init_base))
-        self.assertTrue(model.get_flip(0)[1] is init_board)
+        self.model.flip(self.flip)
+        self.model.step()
 
-        mid_board = model.board
-        mid_base = model.base
-
-        model.flip(flip)
-        model.step()
-
-        self.assertTrue(model.get_flip(1)[0] is mid_base)
-        self.assertTrue(model.get_flip(1)[1] is mid_board)
+        self.assertTrue(self.model.get_flip(1)[0] is mid_base)
+        self.assertTrue(self.model.get_flip(1)[1] is mid_board)
 
     def test_load_iter(self):
-        model = Model((10, 10))
+        self.model.flip(self.flip)
+        self.model.step()
 
-        flip = np.zeros((10, 10), dtype=bool)
-        flip[0:2, 3] = True
-        flip[9, 3] = True
+        mid_board = self.model.board
+        mid_base = self.model.base
 
-        model.flip(flip)
-        model.step()
+        self.model.flip(self.flip)
+        self.model.step()
+        self.model.flip(self.flip)
+        self.model.step()
+        self.model.load_iter(1)
+        self.assertTrue(self.model.base is mid_base)
+        self.assertTrue(self.model.board is mid_board)
 
-        mid_board = model.board
-        mid_base = model.base
-
-        model.flip(flip)
-        model.step()
-        model.flip(flip)
-        model.step()
-        model.load_iter(1)
-        self.assertTrue(model.base is mid_base)
-        self.assertTrue(model.board is mid_board)
-
-    def test_load_step_record(self):
-        pass
+    def test_set_filename(self):
+        self.assertFalse(Model(filename=self.filename).filename is None, "filename is actually set")
+        self.assertEqual(Model(filename=self.filename).filename, self.filename)
 
     def test_record(self):
-        model = Model((10, 10))
+        self.model.flip(self.flip)
+        self.assertTrue(self.model.base is self.model.base_record[0])
+        self.assertTrue(self.model.board is self.model.board_record[0])
 
-        flip = np.zeros((10, 10), dtype=bool)
-        flip[0:2, 3] = True
-        flip[9, 3] = True
+    def test_save_load(self):
+        model_expected = Model(size=(10, 10), filename=self.filename)
+        model_expected.flip(self.flip)
+        model_expected.save()
 
-        model.flip(flip)
-        self.assertTrue(model.base is model.base_record[0])
-        self.assertTrue(model.board is model.board_record[0])
+        model = Model(filename=self.filename, load=True)
+        self.assertTrue(np.all(model_expected.board == model.board))
+        self.assertTrue(np.all(model_expected.base == model.base))
 
-    def test_load(self):
-        pass
+    def test_set_file(self):
+        expected_base, expected_board = self.model.get_flip()
+        self.model.set_filename(self.filename)
+        self.model.flip(self.flip)
+        self.model.save()
+        self.model.load()
+        self.assertTrue(np.all(expected_base == self.model.base))
+        self.assertTrue(np.all(expected_board == self.model.board))
 
-    def test_save(self):
-        pass
+    def test_save_load_pointer(self):
+        model_expected = Model((10, 10), filename=self.filename)
+        model_expected.flip(self.flip)
+        model_expected.save()
+
+        model = Model(filename=self.filename, load=True)
+        self.assertTrue(model.base is model.get_flip()[0])
+        self.assertTrue(model.board is model.get_flip()[1])
+
+    def test_double_save_load(self):
+        model_expected = Model(size=(10, 10), filename=self.filename)
+        model_expected.flip(self.flip)
+        model_expected.save()
+        model_expected.save()
+
+        self.model = Model(filename=self.filename, load=True)
+        self.assertTrue(np.all(model_expected.board == self.model.board))
+        self.assertTrue(np.all(model_expected.base == self.model.base))
+
+    def test_verbose(self):
+        self.model.verbose = True
+        self.model.set_filename(self.filename)
+        old_verbose = self.model.verbose
+        self.model.save()
+        self.model.load()
+        self.assertEqual(self.model.verbose, old_verbose)
+

@@ -1,22 +1,43 @@
+import os
+import gzip
+import pickle
 import numpy as np
 
 
 class Model:
     def __init__(self, size=None, init_board=None, record=True, verbose=False,
-            filename=None):
+                 filename=None, load=False, watchers=None):
         """
+        Constructing:
+            Initially, the model is inactive.
+            - If load is True, the model is loaded from filename.
+            - If the load fails or if load is False, a build is attempted. A
+              build requires init_board or size be specified.
+            - If the model isn't loaded or built, then the model is left
+              inactive.
+            - If the model is inactive, then base, board, base_record,
+              board_record, index, and size are None, and active is False.
+
         Args:
             - size : (row, col) : The size of the cgol board
             - init_board : np.array : The cgol board (to copy)
             - record : bool : If the model should record game states
             - verbose : bool : If logging should be printed
             - filename : str : A file to load
+            - watchers : list-like : A list of objects who watch model
 
-        File IO:
-            If a filename is specified, then it will be used to store
-            recordings when save is called. It will also load what's in the
-            file on initialization. If the file doesn't exist, then it's not
-            loaded nor is it created until the first save is called.
+        Members:
+            - active : True iff the model is active
+            - base : The state
+            - base_record : A record of bases
+            - board : The state with flip modifications
+            - board_record : A record of boards
+            - filename : The file used to store the model
+            - index : The current index in record
+            - record : If the state is being recorded
+            - size : The size of the cgol board
+            - verbose : If logging is printed to stdout
+            - watchers : Watchers of the model's state
 
         Recording:
             Recording records the board states in baseRecord and boardRecord.
@@ -30,21 +51,45 @@ class Model:
             - After a step, copy of base is added to baseRecord, and copy of
               board is added to boardRecord
         """
+        self.record = record
+        self.verbose = verbose
+
+        self.base = None
+        self.board = None
+        self.base_record = None
+        self.board_record = None
+
+        self.index = None
+        self.size = None
+
+        self.filename = filename
+        self.watchers = []
+        self.active = False
+
+        if not load or not self.load():
+            self.build(init_board, size)
+
+        if watchers is not None:
+            for watcher in watchers:
+                self.watch(watcher)
+
+    def build(self, init_board, size):
         if init_board is None:
+            if size is None:
+                return
             init_board = np.zeros(size, dtype=bool)
         self.size = init_board.shape
-
         self.base = init_board.copy()
         self.board = init_board.copy()
-
-        self.record = record
         if self.record:
             self.index = 0
             self.base_record = [self.base]
             self.board_record = [self.board]
+        self.active = True
 
-        self.watchers = []
-        self.verbose = verbose
+    def assert_active(self):
+        if not self.active:
+            raise Exception("model not active")
 
     def watch(self, obj):
         self.watchers.append(obj)
@@ -56,13 +101,18 @@ class Model:
     # get
     def get_step(self, n):
         """ get the step from n to n+1 (board[n] --step--> base[n+1]) """
+        self.assert_active()
         return self.board_record[n], self.base_record[n + 1]
 
     def get_cell(self, row, col):
+        self.assert_active()
         return self.board[row, col]
 
-    def get_flip(self, n):
+    def get_flip(self, n=None):
         """ get the flip from base to board (base[n] --flips--> board[n] """
+        self.assert_active()
+        if n is None:
+            return self.base, self.board
         return self.base_record[n], self.board_record[n]
 
     def get_flip_map(self, n=None):
@@ -70,16 +120,23 @@ class Model:
         get the flip matrix from base to board M where
         base[n] --flip by matrix M--> board[n]
         """
-        if n is None:
-            base, board = self.base, self.board
-        else:
-            base, board = self.get_flip(n)
+        self.assert_active()
+        base, board = self.get_flip(n)
         return base != board
 
     # set
     def set_board(self, board):
+        """
+        This sets self.board to the contents of board. The self.board pointer
+        doesn't change, and it assigns using numpy, so broadcasting works.
+        (i.e., board=False sets all cells to False)
+        """
+        self.assert_active()
         self.board[:, :] = board
         self.notify()
+
+    def set_filename(self, filename):
+        self.filename = filename
 
     # modify
     def flip(self, loc):
@@ -87,6 +144,7 @@ class Model:
         loc : (row, col) by matrix indexing (origin is top left)
         loc : np.array(self.size, dtype=bool)
         """
+        self.assert_active()
         if isinstance(loc, tuple):
             self.board[loc] = not self.board[loc]
         else:
@@ -96,15 +154,18 @@ class Model:
             print('flipped:type(loc)', loc)
 
     def clear_flip(self):
+        self.assert_active()
         self.set_board(self.base)
 
     def step(self):
+        self.assert_active()
         # I wanted the step to be efficient. I used code from here:
         # https://jakevdp.github.io/blog/2013/08/07/conways-game-of-life/
         neighbors_count = sum(
             np.roll(np.roll(self.board, i, 0), j, 1) for i in (-1, 0, 1) for j in (-1, 0, 1) if (i != 0 or j != 0)
         )
         self.board = (neighbors_count == 3) | (self.board & (neighbors_count == 2))
+        # end cite
         self.base = self.board.copy()
 
         if self.record:
@@ -122,6 +183,7 @@ class Model:
             print('step:', self.index)
 
     def back(self):
+        self.assert_active()
         self.load_iter(self.index - 1)
 
     def forward(self, generate=True):
@@ -129,6 +191,7 @@ class Model:
         - generates the next step if at end and if generate is true.
         - forwards args to step if generate is True
         """
+        self.assert_active()
         if self.index + 1 >= len(self.base_record) and generate:
             self.step()
         else:
@@ -136,6 +199,7 @@ class Model:
 
     def load_iter(self, n):
         """ Loads iteration n, before the nth step, record[n] """
+        self.assert_active()
         if not self.record:
             return
 
@@ -150,13 +214,61 @@ class Model:
         self.notify()
 
     def clear_board(self):
+        self.assert_active()
         self.set_board(False)
 
     def invert(self):
+        self.assert_active()
         self.flip(np.ones(self.size, dtype=bool))
 
+    # io
+    def presave(self):
+        filename = self.filename
+        self.filename = None
+        watchers = self.watchers
+        self.watchers = None
+        return filename, watchers
+
+    def postsave(self, state):
+        self.filename, self.watchers = state
+
     def save(self):
-        pass  # TODO: save
+        if self.filename is not None:
+            filename = self.filename
+            state = self.presave()
+            with open(filename, 'wb+') as f:
+                # mode is wb+, and GzipFile can't auto resolve, so mode has to be given
+                fc = gzip.GzipFile(fileobj=f, mode='wb')
+                pickle.dump(self, fc)
+                fc.close()
+            self.postsave(state)
+            return True
+        return False
 
     def load(self):
-        pass  # TODO: load custom files
+        """
+        Loads state from self.filename if not None and if file exists.
+        self.filename and self.watchers are preserved.
+
+        Returns:
+            True if loaded
+        """
+        if self.filename is not None and os.path.exists(self.filename):
+            with gzip.open(self.filename) as f:
+                self.load_state(pickle.load(f))
+            return True
+        return False
+
+    def load_state(self, state):
+        self.active = state.active
+        self.size = state.size
+        self.record = state.record
+        self.index = state.index
+        self.base_record = state.base_record
+        self.board_record = state.board_record
+        self.base = state.base
+        self.board = state.board
+
+        # this will fix self.base and self.board pointers
+        if self.active:
+            self.load_iter(self.index)

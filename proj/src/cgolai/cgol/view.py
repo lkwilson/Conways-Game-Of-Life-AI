@@ -213,7 +213,6 @@ class View:
 
     def quit(self, event):
         self.running = False
-        self.ctrl.save()
 
     def right(self, event):
         self.ctrl.forward()
@@ -246,3 +245,4 @@ class View:
 
     def open(self, event):
         self.ctrl.load()
+        # TODO: handle model size change

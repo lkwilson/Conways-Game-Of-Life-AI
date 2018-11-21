@@ -6,3 +6,4 @@ notebookcode.py
 *.tar
 play/
 .idea/
+src/test/*.dat
