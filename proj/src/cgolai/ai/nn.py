@@ -4,7 +4,7 @@ import numpy as np
 from .actfunc import relu, relu_p, identity, identity_p
 
 
-class NeuralNetwork:
+class NN:
     def __init__(self, shape, mu=0.0001, h=None, h_p=None, h_out=None, h_out_p=None, hs=None, hs_p=None):
         """
         Shape is a listable object of positive integers specifying how many
@@ -137,9 +137,10 @@ class NeuralNetwork:
         self.init_weights_and_biases()
 
         report_every = iterations//10
+        xy_zipped = zip(x, y)
         for i in range(iterations):
             self.total_error = 0
-            for _x, _y in zip(x, y):
+            for _x, _y in xy_zipped:
                 self._train(_x, _y)
                 self.total_error += self.E
             if verbose and iterations > 10 and i % report_every == 0:

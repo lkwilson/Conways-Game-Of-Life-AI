@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from cgolai.ai import NeuralNetwork as NN
+from cgolai.ai import NN
 
 
 class TestNN(unittest.TestCase):
