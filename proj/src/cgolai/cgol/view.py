@@ -65,6 +65,7 @@ class View:
             pygame.K_RIGHT: self.right, pygame.K_l: self.right,
             pygame.K_UP: self.speed_up, pygame.K_k: self.speed_up,
             pygame.K_DOWN: self.speed_down, pygame.K_j: self.speed_down,
+            pygame.K_q: self.quit,
             pygame.K_c: self.clear,
             pygame.K_r: self.reset,
             pygame.K_n: self.step,
