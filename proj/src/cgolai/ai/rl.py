@@ -3,7 +3,7 @@ import numpy as np
 from .nn import NN
 
 
-class RL:
+class RL:  # TODO: test lol
     def __init__(self, rho, epsilon_decay_factor, problem, maximize_reward=True, **nn_config):
         self.rho = rho
         self.epsilon = 1.0

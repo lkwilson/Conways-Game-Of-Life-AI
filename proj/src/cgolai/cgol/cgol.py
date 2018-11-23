@@ -113,7 +113,6 @@ class Cgol:
 
     def load(self):
         self.model.load()
-        # TODO: handle model size change
 
     def play_pause(self):
         self.ticking = not self.ticking

@@ -4,7 +4,7 @@ import numpy as np
 from .actfunc import relu, relu_p, identity, identity_p
 
 
-class NN:
+class NN:  # TODO: better descent
     def __init__(self, shape, mu=0.0001, h=None, h_p=None, h_out=None, h_out_p=None, hs=None, hs_p=None):
         """
         Shape is a listable object of positive integers specifying how many

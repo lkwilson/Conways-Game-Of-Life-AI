@@ -20,6 +20,7 @@ class View:
         self.screen = None
         self.DEAD_COLOR = None
         self.ALIVE_COLOR = None
+        self.FLIP_COLOR = None
         self.tile_width = None
         self.tile_height = None
         self.ctrl = None
@@ -46,12 +47,19 @@ class View:
             pygame.display.set_icon(pygame.image.load(logo))
         pygame.display.set_caption(title)
 
-        # colors
-        self.DEAD_COLOR = self.color(0x67, 0xB4, 0xFF)
-        self.ALIVE_COLOR = self.color(0x67, 0xFF, 0xB2)
-        # self.FLIP_COLOR = self.color()
+        # colors (lower are ones I like)
+        # hexes = "4edcff,4e83ff,4effca".split(',')  # colors near blue
+        # hexes = "ffff89,c489ff,89c4ff".split(',')  # yellow purple blue
+        # hexes = "67b4ff,67ffb2,ffffff".split(',')  # blue green black
+        # hexes = "f0f0f0,a1a6ff,d0f8d5".split(',')  # white blue green
+        hexes = "f0f0f0,0f0f0f,909090".split(',')  # white black grey
+        colors = [self.color(hex_val=hex_val) for hex_val in hexes]
+        self.DEAD_COLOR, self.ALIVE_COLOR, self.FLIP_COLOR = colors
 
         # tiles
+        self.fit_model_size()
+
+    def fit_model_size(self):
         model_height, model_width = self.ctrl.get_model().size
         self.tile_width = self.width // model_width
         self.tile_height = self.height // model_height
@@ -99,11 +107,13 @@ class View:
         print('i - invert cells')
 
     @staticmethod
-    def color(r=0, g=0, b=0, a=None):
+    def color(r=0, g=0, b=0, a=None, hex_val=None):
         """ A color building method
 
         arg types are integer: 0-256
         """
+        if hex_val is not None:
+            r, g, b = [int(x, 16) for x in (hex_val[:2], hex_val[2:4], hex_val[4:])]
         if a is None:
             return r, g, b
         else:
@@ -173,6 +183,14 @@ class View:
         col, row = pos
         row //= self.tile_height
         col //= self.tile_width
+        if row < 0:
+            row = 0
+        elif row > self.ctrl.get_model().size[0]:
+            row = self.ctrl.get_model().size[0]
+        if col < 0:
+            col = 0
+        elif col > self.ctrl.get_model().size[1]:
+            col = self.ctrl.get_model().size[1]
         return model.size[0]-1-row, col
 
     # RENDER
@@ -186,15 +204,27 @@ class View:
 
     def render_model(self):
         """ only this function reads from the model """
+        self.render_cells()
+
+    def render_cells(self):
         model = self.ctrl.get_model()
+        flip_map = model.get_flip_map()
         for row in range(model.size[0]):
             for col in range(model.size[1]):
-                if model.get_cell(row, col):
-                    xpos = col*self.tile_width
-                    ypos = (model.size[0]-1-row)*self.tile_height
-                    pygame.draw.rect(self.screen,
-                            self.ALIVE_COLOR,
-                            [xpos, ypos, self.tile_width, self.tile_height])
+                self.draw_cell(row, col, flip_map, model)
+
+    def draw_cell(self, row, col, flip_map, model):
+        xpos = col * self.tile_width
+        ypos = (model.size[0] - 1 - row) * self.tile_height
+        if model.get_cell(row, col):
+            rect = [xpos, ypos, self.tile_width, self.tile_height]
+            pygame.draw.rect(self.screen, self.ALIVE_COLOR, rect)
+        if flip_map[row, col]:
+            x_flip_pos = xpos + self.tile_width/4
+            y_flip_pos = ypos + self.tile_height/4
+            rect = [x_flip_pos, y_flip_pos, self.tile_width/2, self.tile_height/2]
+            pygame.draw.ellipse(self.screen, self.FLIP_COLOR, rect)
+
 
     # EVENT HANDLERS
     def speed_up(self, event):
@@ -246,4 +276,4 @@ class View:
 
     def open(self, event):
         self.ctrl.load()
-        # TODO: handle model size change
+        self.fit_model_size()

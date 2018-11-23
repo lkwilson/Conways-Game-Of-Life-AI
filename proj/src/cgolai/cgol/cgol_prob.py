@@ -3,6 +3,7 @@ import numpy as np
 from ..ai import Problem
 
 
+# TODO: test this?
 class CGolProblem(Problem):
     def __init__(self, model, init_flip):
         self.model = model
