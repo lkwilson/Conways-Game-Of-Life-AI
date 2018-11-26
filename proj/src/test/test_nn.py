@@ -33,7 +33,7 @@ class TestNN(unittest.TestCase):
     def test_fit_single(self):
         x = np.linspace(0, 10, 50).reshape(50, 1)
         t = np.sin(x).reshape(50, 1)
-        nn = NN([16, *self.inner, 4])
+        nn = NN([None, *self.inner, None])
         nn.fit(x, t, verbose=self.verbose, iterations=self.iterations)
         y = nn.predict(x)
         if self.verbose:
