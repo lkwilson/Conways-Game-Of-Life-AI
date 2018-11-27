@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-from .actfunc import sigmoid, sigmoid_p, identity, identity_p
+from .actfunc import relu, relu_p, sigmoid, sigmoid_p, identity, identity_p
 
 
 class NN:  # TODO: better descent
@@ -62,7 +62,11 @@ class NN:  # TODO: better descent
 
     @staticmethod
     def get_default_h_h_p(h, h_p):
-        return (sigmoid, sigmoid_p) if h is None else (h, h_p)
+        default_h = 'relu'
+        if default_h == 'relu':
+            return (relu, relu_p) if h is None else (h, h_p)
+        else:
+            return (sigmoid, sigmoid_p) if h is None else (h, h_p)
 
     @staticmethod
     def get_default_h_out_h_out_p(h_out, h_out_p):
@@ -119,6 +123,8 @@ class NN:  # TODO: better descent
         # x.shape = (n_samples, m_features)
         # y.shape = (n_samples, k_targets)
         # will change shape of weights matrix if sizes aren't as expected
+        x = np.array(x)
+        y = np.array(y)
         if not self.initialized:
             self.num_samples = x.shape[0]
             self.N[0] = x.shape[1]
@@ -135,9 +141,10 @@ class NN:  # TODO: better descent
             if verbose and iterations > 10 and i % report_every == 0:
                 print('iterations: {}; error: {}'.format(i, self.total_error))
 
-    def predict(self, X):
+    def predict(self, x):
         # x.shape = (n_samples, m_features)
-        return np.array([self.feed_forward(x) for x in X])
+        x = np.array(x)
+        return np.array([self.feed_forward(_x) for _x in x])
 
     def init_weights_and_biases(self):
         if self.N[0] is None or self.N[-1] is None:

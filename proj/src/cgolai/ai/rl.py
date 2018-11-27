@@ -1,13 +1,14 @@
 import numpy as np
 
-from .nn import NN
+from .nn_torch import NNTorch as NN
+#from .nn import NN
 
 
 class RL:
-    def __init__(self, problem, shape, verbose=False, rho=0.1, epsilon_decay_factor=0.9,
+    def __init__(self, problem, shape, verbose=False, rho=0.1, epsilon_decay_factor=0.9, epsilon_init=1.0,
                  use_nn=True, stochastic=False, **nn_config):
         self._rho = rho
-        self._epsilon = 1.0
+        self._epsilon = epsilon_init
         self._epsilon_decay_factor = epsilon_decay_factor
         self._problem = problem
         self._argbest = np.argmax if self._problem.maximize else np.argmin
@@ -23,6 +24,14 @@ class RL:
         else:
             self._Q = {}
 
+    def get_value(self, action=None, key=None, default_q=0):
+        if key is None:
+            key = self._problem.key(action)
+        if self._use_nn:
+            return self._Q.predict(key)
+        else:
+            return self._Q.get(key, default_q)
+
     def choose_best_action(self, actions=None, explore=False):
         """ Return best action with epsilon exploration factor """
         if actions is None:
@@ -30,15 +39,9 @@ class RL:
         epsilon = self._epsilon if explore else 0.0
         if np.random.rand() < epsilon:
             action = actions[np.random.randint(len(actions))]
-            if self._use_nn:
-                return action, self._Q.predict(self._problem.key(action))
-            else:
-                return action, self._Q.get(self._problem.key(action), 0)
+            return action, self.get_value(action)
         else:
-            if self._use_nn:
-                values = [self._Q.predict(self._problem.key(action)) for action in actions]
-            else:
-                values = [self._Q.get(self._problem.key(action), 0) for action in actions]
+            values = [self.get_value(action) for action in actions]
             best_index = self._argbest(values)
             return actions[best_index], values[best_index]
 
@@ -53,15 +56,10 @@ class RL:
             old_key = None
             steps = 0
             while not self._problem.is_terminal():
-                action, Qnext = self.choose_best_action(explore=True)
+                action, q_val = self.choose_best_action(explore=True)
                 key, reward = self._problem.do(action)
-                if not self._use_nn and key not in self._Q:
-                    self._Q[key] = 0
                 if steps > 0:
-                    if self._use_nn:
-                        old_q = self._Q.predict(old_key)
-                    else:
-                        old_q = self._Q[old_key]
+                    old_q = self.get_value(key=old_key)
                     if self._problem.is_terminal():
                         # SARSA requires Q to predict goal state-action pairs as 0,
                         # so I manually implement this due to the inaccuracy of
@@ -72,10 +70,8 @@ class RL:
                         else:
                             t = reward
                     else:
-                        if self._use_nn:
-                            td_error = old_reward + self._Q.predict(key) - old_q
-                        else:
-                            td_error = old_reward + self._Q[key] - old_q
+                        q_val = self.get_value(key=key)
+                        td_error = old_reward + q_val - old_q
                         t = old_q + self._rho * td_error
                     if self._use_nn:
                         if isinstance(t, int):
