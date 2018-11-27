@@ -28,4 +28,4 @@ def sigmoid(x):
 
 
 def sigmoid_p(x):
-    return 1*(1 - x)
+    return sigmoid(x)*(1 - sigmoid(x))
