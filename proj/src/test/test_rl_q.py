@@ -1,6 +1,6 @@
 import unittest
 
-from cgolai.ai import RL
+from cgolai.ai import RLQ as RL
 from .util import Hanoi
 
 
@@ -23,14 +23,11 @@ class TestRL(unittest.TestCase):
                 total += b*b
         return total/len(A)
 
-    def tet_rl_basic(self):
-        rl = RL(problem=self.problem, epsilon_decay_factor=self.epsilon_decay_factor, epsilon_init=self.epsilon_init,
-                verbose=self.verbose, shape=[None, *self.inner, None])
-
-        rl.train(25, max_steps=1000, iterations=1000)
+    def test_rl_basic_nonn_nostochastic(self):
+        rl = RL(problem=self.problem, stochastic=False, verbose=False, shape=[None, *self.inner, None])
+        rl.train(500)
         steps = 0
         self.problem.reset()
-        steps_record = []
         while not self.problem.is_terminal():
             action, _ = rl.choose_best_action(explore=False)
             self.problem.do(action)
@@ -41,3 +38,17 @@ class TestRL(unittest.TestCase):
             print(steps)
         self.assertEqual(steps, 7)
 
+    def test_rl_basic_nonn(self):
+        rl = RL(problem=self.problem, stochastic=True, verbose=False)
+        rl.train(500)
+        steps = 0
+        self.problem.reset()
+        while not self.problem.is_terminal():
+            action, _ = rl.choose_best_action(explore=False)
+            self.problem.do(action)
+            steps += 1
+            if steps > 100:
+                break
+        if self.verbose and steps != 7:
+            print(steps)
+        self.assertEqual(steps, 7)

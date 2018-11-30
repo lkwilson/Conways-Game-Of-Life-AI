@@ -5,7 +5,7 @@ from .actfunc import relu, relu_p, sigmoid, sigmoid_p, identity, identity_p
 
 
 class NN:  # TODO: better descent
-    def __init__(self, shape, mu=0.01, h=None, h_p=None, h_out=None, h_out_p=None, hs=None, hs_p=None):
+    def __init__(self, shape, mu=0.01, h=None, h_p=None, h_out=None, h_out_p=None, hs=None, hs_p=None, *args, **kwargs):
         """
         Shape is a listable object of positive integers specifying how many
         nodes are in each layer. If input or output layer is unknown, they can
@@ -140,6 +140,7 @@ class NN:  # TODO: better descent
                 self.total_error += self.E
             if verbose and iterations > 10 and i % report_every == 0:
                 print('iterations: {}; error: {}'.format(i, self.total_error))
+        return x, y
 
     def predict(self, x):
         # x.shape = (n_samples, m_features)

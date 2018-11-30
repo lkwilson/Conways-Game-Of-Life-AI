@@ -1,16 +1,13 @@
-import numpy as np
-
 from cgolai.ai import Problem
 
 
 class Hanoi(Problem):
-    def __init__(self, size=3, use_nn=True):
+    def __init__(self, size=3):
         super().__init__()
         self.size = size
         self.state = None
         self.reward = -1
         self.reset()
-        self.use_nn = use_nn
 
     def is_terminal(self):
         """ Returns if the state is a terminal state """
@@ -34,16 +31,10 @@ class Hanoi(Problem):
 
     def key(self, action):
         """ Return the state-action key from the current state given the action """
-        if self.use_nn:
-            return np.array([self._state_rep() + action])
-        else:
-            return (*self._state_rep(),  *action)
+        return (*self._state_rep(),  *action)
 
     def get_key_dim(self):
-        if self.use_nn:
-            return super().get_key_dim()
-        else:
-            return 1  # doesn't matter
+        return 5
 
     def print_board(self):
         lens = [len(p) for p in self.state]

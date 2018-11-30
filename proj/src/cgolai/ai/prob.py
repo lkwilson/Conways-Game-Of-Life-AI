@@ -13,7 +13,7 @@ class Problem:
 
     def get_key_dim(self):
         """ Return the dimensions of the key """
-        return len(self.key(self.actions()[0])[0])
+        pass
 
     def key(self, action):
         """ Return the state-action key from the current state given the action """
