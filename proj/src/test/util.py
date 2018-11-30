@@ -3,10 +3,10 @@ from cgolai.ai import Problem
 
 class Hanoi(Problem):
     def __init__(self, size=3):
-        super().__init__()
+        super().__init__(maximize=False)
         self.size = size
         self.state = None
-        self.reward = -1
+        self.reward = 1
         self.reset()
 
     def is_terminal(self):
@@ -27,7 +27,8 @@ class Hanoi(Problem):
 
     def reset(self):
         """ Initialize the state to the initial position """
-        self.state = self._init_hanoi(self.size)
+        peg1 = list(range(1, self.size + 1))
+        self.state = [peg1, [], []]
 
     def key(self, action):
         """ Return the state-action key from the current state given the action """
@@ -57,13 +58,7 @@ class Hanoi(Problem):
         old_state_action_key = self.key(action)
         src, dst = action
         self.state[dst].insert(0, self.state[src].pop(0))
-        #self.print_board()
         return old_state_action_key, self.reward
-
-    @staticmethod
-    def _init_hanoi(size):
-        peg1 = list(range(1, size + 1))
-        return [peg1, [], []]
 
     def _state_rep(self):
         newrep = list(range(self.size))
@@ -71,3 +66,12 @@ class Hanoi(Problem):
             for disk in peglist:
                 newrep[disk - 1] = pegi + 1
         return newrep
+
+
+class HanoiNN(Hanoi):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def key(self, action):
+        """ Return the state-action key from the current state given the action """
+        return [*self._state_rep(),  *action]

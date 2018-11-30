@@ -1,38 +1,55 @@
 import unittest
 
 from cgolai.ai import RL
-from .util import Hanoi
+from .util import HanoiNN
 
 
 class TestRL(unittest.TestCase):
     def setUp(self):
-        self.mu = .001
-        self.inner = [10, 10]
-        self.rows = 50
-        self.verbose = True  # for debugging
-        self.iterations = 2
-        self.epsilon_decay_factor = 0.9
+        self.inner = [50, 50, 50]
+        self.verbose = False
+        self.verbose_model = False
+        self.problem = HanoiNN()
+        self.epsilon_decay_factor = 0.99
         self.epsilon_init = 1.0
-        self.problem = Hanoi()
+        self.epsilon_min = 0.1
+        self.stochastic = False
+        self.mu = 0.01
+        self.discount_factor = 1.0
+        self.batches = 80
+        self.batch_size = 20
+        self.replay_count = 0
+        self.iterations = 10
 
-    @staticmethod
-    def norm(A):
-        total = 0
-        for a in A:
-            for b in a:
-                total += b*b
-        return total/len(A)
+    def test_rl_basic(self):
+        # build and train
+        rl = RL(self.problem,
+                [None, *self.inner, None],
+                verbose=self.verbose_model,
+                epsilon_decay_factor=self.epsilon_decay_factor,
+                epsilon_init=self.epsilon_init,
+                epsilon_min=self.epsilon_min,
+                stochastic=self.stochastic,
+                mu=self.mu,
+                discount_factor=self.discount_factor,
+                batches=self.batches,
+                batch_size=self.batch_size,
+                replay_count=self.replay_count,
+                h=None,
+                optim=None)
+        rl.train(batches=self.batches,
+                 batch_size=self.batch_size,
+                 replay_count=self.replay_count,
+                 iterations=self.iterations,
+                 epsilon=self.epsilon_init)
 
-    def tet_rl_basic(self):
-        rl = RL(problem=self.problem, epsilon_decay_factor=self.epsilon_decay_factor, epsilon_init=self.epsilon_init,
-                verbose=self.verbose, shape=[None, *self.inner, None])
-
-        rl.train(25, max_steps=1000, iterations=1000)
+        # test it
         steps = 0
         self.problem.reset()
-        steps_record = []
         while not self.problem.is_terminal():
-            action, _ = rl.choose_best_action(explore=False)
+            action, q_val = rl.choose_best_action(explore=False)
+            if self.verbose:
+                print('action:', action, 'q_val:', q_val)
             self.problem.do(action)
             steps += 1
             if steps > 100:

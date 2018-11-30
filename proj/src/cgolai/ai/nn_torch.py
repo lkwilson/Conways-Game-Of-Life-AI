@@ -10,7 +10,7 @@ class NNTorch:
 
     I used it to understand pytorch, and my NN has more features than what they present.
     """
-    def __init__(self, shape, mu=0.01, h=None, optim=None, *args, **kwargs):  # toss args
+    def __init__(self, shape, mu=0.01, h=None, optim=None):  # toss args
         """
         Shape is a listable object of positive integers specifying how many
         nodes are in each layer. If input or output layer is unknown, they can
@@ -22,9 +22,10 @@ class NNTorch:
         self.num_samples = None
         self.net = None
         self.criterion = None
-        self.h = h if h is not None else torch.nn.Tanh
+        self.h = h if h is not None else torch.nn.ReLU
         self.optim = optim if optim is not None else torch.optim.Adam
         self.optimizer = None
+        self._default_fit_iterations = 1000
 
         self.set_shape(shape)
 
@@ -32,7 +33,11 @@ class NNTorch:
         self.mu = mu
 
         # self.W and self.b
+        self._is_trained = False
         self.init_net()
+
+    def is_trained(self):
+        return self._is_trained
 
     @staticmethod
     def check_n_edge(edge):
@@ -51,23 +56,26 @@ class NNTorch:
     @staticmethod
     def to_tensor(val):
         if isinstance(val, np.ndarray):
-            ret = torch.from_numpy(val).to(torch.float)
+            try:
+                ret = torch.from_numpy(val).cuda().to(torch.float)
+            except RuntimeError:
+                ret = torch.from_numpy(val).to(torch.float)
         elif isinstance(val, list):
-            ret = torch.Tensor(val).to(torch.float)
+            ret = torch.Tensor(val)
         else:
             ret = val
-        #if len(ret) == 1:
-            #ret.unsqueeze(0)
         return ret
 
     def normalize(self, x, y):
         # TODO
         return x, y
 
-    def fit(self, x, y, verbose=False, iterations=1000):
+    def fit(self, x, y, verbose=False, iterations=None):
         # x.shape = (n_samples, m_features)
         # y.shape = (n_samples, k_targets)
         # will change shape of weights matrix if sizes aren't as expected
+        if iterations is None:
+            iterations = self._default_fit_iterations
         x = self.to_tensor(x)
         y = self.to_tensor(y)
 
@@ -83,12 +91,13 @@ class NNTorch:
             self.optimizer.step()
             if verbose and iterations > 10 and i % report_every == 0:
                 print('iterations: {}; error: {}'.format(i, loss))
+        self._is_trained = True
         return x, y
 
-    def predict(self, X):
+    def predict(self, x):
         # x.shape = (n_samples, m_features)
-        X = self.to_tensor(X)
-        return self.net.forward(X)
+        x = self.to_tensor(x)
+        return self.net.forward(x).detach().numpy()
 
     def init_net(self, in_layer=None, out_layer=None):
         if self.N[0] is None and in_layer is not None:
