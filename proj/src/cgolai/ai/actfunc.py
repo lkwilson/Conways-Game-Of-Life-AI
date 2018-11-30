@@ -21,3 +21,11 @@ def identity(x):
 def identity_p(x):
     """ its derivative """
     return np.ones(shape=x.shape)
+
+
+def sigmoid(x):
+    return 1 / (1+np.exp(-x))
+
+
+def sigmoid_p(x):
+    return sigmoid(x)*(1 - sigmoid(x))

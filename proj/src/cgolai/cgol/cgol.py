@@ -10,7 +10,8 @@ class Cgol:
     def __init__(self, **config):
         """
         Model Config:
-            board_size
+            width
+            height
             verbose
             filename
 
@@ -31,7 +32,9 @@ class Cgol:
         self.ticking = False
 
         # model config
-        board_size = config.get('board_size', (60, 80))
+        width = config.get('width', 80)
+        height = config.get('height', 60)
+        board_size = config.get('board_size', (width, height))
         self.verbose = config.get('verbose', False)
         filename = config.get('filename', None)
         self.model = Model(

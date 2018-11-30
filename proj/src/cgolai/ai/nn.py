@@ -1,11 +1,11 @@
 import random
 import numpy as np
 
-from .actfunc import relu, relu_p, identity, identity_p
+from .actfunc import relu, relu_p, sigmoid, sigmoid_p, identity, identity_p
 
 
 class NN:  # TODO: better descent
-    def __init__(self, shape, mu=0.0001, h=None, h_p=None, h_out=None, h_out_p=None, hs=None, hs_p=None):
+    def __init__(self, shape, mu=0.01, h=None, h_p=None, h_out=None, h_out_p=None, hs=None, hs_p=None, *args, **kwargs):
         """
         Shape is a listable object of positive integers specifying how many
         nodes are in each layer. If input or output layer is unknown, they can
@@ -38,6 +38,7 @@ class NN:  # TODO: better descent
         self.z = None
         self.e = None
         self.E = None
+        self.initialized = False
 
         self.set_shape(shape)
         self.set_hs_hs_p(h, h_p, h_out, h_out_p, hs, hs_p)
@@ -61,7 +62,11 @@ class NN:  # TODO: better descent
 
     @staticmethod
     def get_default_h_h_p(h, h_p):
-        return (relu, relu_p) if h is None else (h, h_p)
+        default_h = 'relu'
+        if default_h == 'relu':
+            return (relu, relu_p) if h is None else (h, h_p)
+        else:
+            return (sigmoid, sigmoid_p) if h is None else (h, h_p)
 
     @staticmethod
     def get_default_h_out_h_out_p(h_out, h_out_p):
@@ -98,10 +103,8 @@ class NN:  # TODO: better descent
 
     def change_none_to_default(self):
         for i in range(len(self.hs[:-1])):
-            self.hs[i], self.hs_p[i] = self.get_default_h_h_p(self.hs[i],
-                                                              self.hs_p[i])
-        self.hs[-1], self.hs_p[-1] = self.get_default_h_out_h_out_p(self.hs[-1],
-                                                                    self.hs_p[-1])
+            self.hs[i], self.hs_p[i] = self.get_default_h_h_p(self.hs[i], self.hs_p[i])
+        self.hs[-1], self.hs_p[-1] = self.get_default_h_out_h_out_p(self.hs[-1], self.hs_p[-1])
 
     def set_hs_hs_p(self, h, h_p, h_out, h_out_p, hs, hs_p):
         # initialize and check input
@@ -116,25 +119,17 @@ class NN:  # TODO: better descent
         self.extend_hs_hs_p(h, h_p, h_out, h_out_p)
         self.change_none_to_default()
 
-    def fit(self, x, y, verbose=False, iterations=250):
+    def fit(self, x, y, verbose=False, iterations=1000):
         # x.shape = (n_samples, m_features)
         # y.shape = (n_samples, k_targets)
         # will change shape of weights matrix if sizes aren't as expected
         x = np.array(x)
         y = np.array(y)
-
-        self.num_samples = x.shape[0]
-        try:
+        if not self.initialized:
+            self.num_samples = x.shape[0]
             self.N[0] = x.shape[1]
-        except IndexError:
-            # x has invalid shape. Assuming x is a column vector
-            x = x.reshape(x.shape[0], 1)
-            self.N[0] = 1
-        try:
             self.N[-1] = y.shape[1]
-        except IndexError:
-            self.N[-1] = 1
-        self.init_weights_and_biases()
+            self.init_weights_and_biases()
 
         report_every = iterations//10
         xy_zipped = zip(x, y)
@@ -145,10 +140,12 @@ class NN:  # TODO: better descent
                 self.total_error += self.E
             if verbose and iterations > 10 and i % report_every == 0:
                 print('iterations: {}; error: {}'.format(i, self.total_error))
+        return x, y
 
     def predict(self, x):
         # x.shape = (n_samples, m_features)
-        return np.array([self.feed_forward(x) for x in x])
+        x = np.array(x)
+        return np.array([self.feed_forward(_x) for _x in x])
 
     def init_weights_and_biases(self):
         if self.N[0] is None or self.N[-1] is None:
@@ -162,6 +159,7 @@ class NN:  # TODO: better descent
             self.b.append(self.init_bias(bias_length))
         self.W = np.array(self.W)
         self.b = np.array(self.b)
+        self.initialized = True
 
     def _train(self, x, y):
         # called for every sample
