@@ -13,6 +13,8 @@ class RL:
                      discount_factor=1.0,
                      batches=80,
                      batch_size=20,
+                     max_steps=None,
+                     max_steps_reward=None,
                      replay_count=0,
                      h=None,
                      optim=None):
@@ -27,9 +29,8 @@ class RL:
             self._gamma = discount_factor
             self._batches = batches
             self._batch_size = batch_size
-            self.batch_size = batch_size
-            self.x_batch = []
-            self.t_batch = []
+            self._max_steps = max_steps
+            self._max_steps_reward = max_steps_reward
             self._replay_count = replay_count
             if shape[0] is None or shape[-1] is None:
                 shape[0] = self._problem.get_key_dim()
@@ -59,13 +60,17 @@ class RL:
                 best_index = self._argbest(values)
                 return actions[best_index], values[best_index]
     
-        def train(self, batches=None, batch_size=None, replay_count=None, iterations=None, epsilon=None):
+        def train(self, batches=None, batch_size=None, max_steps=None, max_steps_reward=None, replay_count=None, iterations=None, epsilon=None):
             if batches is None:
                 batches = self._batches
             if batch_size is None:
                 batch_size = self._batch_size
             if replay_count is None:
                 replay_count = self._replay_count
+            if max_steps is None:
+                max_steps = self._max_steps
+            if max_steps_reward is None:
+                max_steps_reward = self._max_steps_reward
             if epsilon is None:
                 self._epsilon = self._epsilon_orig
             else:
@@ -85,14 +90,23 @@ class RL:
 
                 for rep in range(batch_size):
                     repk += 1
-                    step = 0
+                    steps = 0
                     self._problem.reset()
                     action, q_val = self.choose_best_action(explore=True)
                     key, reward = self._problem.do(action)
 
                     while not self._problem.is_terminal():
+                        if max_steps is not None and steps >= max_steps:
+                            # the algorithm equates this to finding the goal. Better is to ensure
+                            # that the problem can reach a terminal state, and then provide more accurate
+                            # feedback through the reward. For example, using max_steps makes the reward
+                            # whatever step happened to be last. If you manually induce terminal state after
+                            # some number of steps, you can provide a reward more representative of the cutoff
+                            if max_steps_reward is not None:
+                                reward = max_steps_reward
+                            break
                         # step
-                        step += 1
+                        steps += 1
                         action, q_val = self.choose_best_action(explore=True)
                         samples.append([*key, reward, q_val])
                         key, reward = self._problem.do(action)

@@ -1,4 +1,4 @@
-from cgolai.ai import Problem
+from cgolai.ai import Problem, ProblemNN
 
 
 class Hanoi(Problem):
@@ -10,11 +10,11 @@ class Hanoi(Problem):
         self.reset()
 
     def is_terminal(self):
-        """ Returns if the state is a terminal state """
+        """ Returns True iff the state is a terminal state """
         return len(self.state[0]) == 0 and len(self.state[1]) == 0
 
     def actions(self):
-        """ Returns possible actions given the current state """
+        """ Returns list of possible actions """
         ret = []
         for srci, src in enumerate(self.state):
             for dsti, dst in enumerate(self.state):
@@ -34,8 +34,12 @@ class Hanoi(Problem):
         """ Return the state-action key from the current state given the action """
         return (*self._state_rep(),  *action)
 
-    def get_key_dim(self):
-        return 5
+    def do(self, action):
+        """ Perform the specified action on current state, and returns (state-action key, reward) """
+        old_state_action_key = self.key(action)
+        src, dst = action
+        self.state[dst].insert(0, self.state[src].pop(0))
+        return old_state_action_key, self.reward
 
     def print_board(self):
         lens = [len(p) for p in self.state]
@@ -50,16 +54,6 @@ class Hanoi(Problem):
         print('------')
         print()
 
-    def do(self, action):
-        """ Perform the specified action on current state.
-
-        Returns the (old_state, action) key
-        """
-        old_state_action_key = self.key(action)
-        src, dst = action
-        self.state[dst].insert(0, self.state[src].pop(0))
-        return old_state_action_key, self.reward
-
     def _state_rep(self):
         newrep = list(range(self.size))
         for pegi, peglist in enumerate(self.state):
@@ -68,9 +62,13 @@ class Hanoi(Problem):
         return newrep
 
 
-class HanoiNN(Hanoi):
+class HanoiNN(Hanoi, ProblemNN):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def get_key_dim(self):
+        """ Returns the length of the state-action key """
+        return 5
 
     def key(self, action):
         """ Return the state-action key from the current state given the action """

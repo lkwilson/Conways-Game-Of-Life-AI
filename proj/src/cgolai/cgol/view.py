@@ -105,6 +105,7 @@ class View:
         print('s - save iterations')
         print('o - open iterations')
         print('i - invert cells')
+        # TODO: RAND
 
     @staticmethod
     def color(r=0, g=0, b=0, a=None, hex_val=None):

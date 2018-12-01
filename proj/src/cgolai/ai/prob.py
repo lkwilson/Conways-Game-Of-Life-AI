@@ -1,32 +1,39 @@
-class Problem:
+from abc import ABC, abstractmethod
+
+
+class Problem(ABC):
     def __init__(self, maximize=True):
         """ problem should be initialized to the point of where actions will return actions """
         self.maximize = maximize
 
+    @abstractmethod
     def is_terminal(self):
-        """ Returns if the state is a terminal state """
+        """ Returns True iff the state is a terminal state """
         pass
 
+    @abstractmethod
     def actions(self):
-        """ Returns possible actions given the current state """
+        """ Returns list of possible actions """
         pass
 
-    def get_key_dim(self):
-        """ Return the dimensions of the key """
-        pass
-
+    @abstractmethod
     def key(self, action):
         """ Return the state-action key from the current state given the action """
         pass
 
+    @abstractmethod
     def do(self, action):
-        """ Perform the specified action on current state.
-
-        Returns the (old_state, action) key
-        """
+        """ Perform the specified action on current state, and returns (state-action key, reward) """
         pass
 
+    @abstractmethod
     def reset(self):
         """ Initialize the state to the initial position """
         pass
 
+
+class ProblemNN(Problem, ABC):
+    @abstractmethod
+    def get_key_dim(self):
+        """ Returns the length of the state-action key """
+        pass
