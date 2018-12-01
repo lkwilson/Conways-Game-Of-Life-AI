@@ -51,10 +51,11 @@ class RL:
     
             if np.random.rand() < epsilon:
                 action = actions[np.random.randint(len(actions))]
-                value = self.get_value(action)
-                return action, value
+                key = self._problem.key(action)
+                return action, self._q.predict(key)
             else:
-                values = [self.get_value(action) for action in actions]  # optimize this
+                keys = [self._problem.key(action) for action in actions]
+                values = self._q.predict(keys)
                 best_index = self._argbest(values)
                 return actions[best_index], values[best_index]
     

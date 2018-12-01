@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 import numpy as np
 
 
@@ -17,99 +16,85 @@ class NNTorch:
         be of type None. Activation functions default to relu for hidden layers
         and no activation function on the output layer.
         """
-        self.N = None
-        self.total_error = None
-        self.num_samples = None
-        self.net = None
-        self.criterion = None
+        self.shape = list(shape)
+        self.mu = mu
         self.h = h if h is not None else torch.nn.ReLU
         self.optim = optim if optim is not None else torch.optim.Adam
+        self.nn = None
+        self.criterion = None
         self.optimizer = None
         self._default_fit_iterations = 1000
+        self._cuda = torch.cuda.is_available()
 
-        self.set_shape(shape)
+        for n in self.shape[1:-1]:
+            if not isinstance(n, int):
+                raise TypeError("expected int for shape")
 
         # hyper params
-        self.mu = mu
-
-        # self.W and self.b
         self._is_trained = False
         self.init_net()
 
     def is_trained(self):
         return self._is_trained
 
-    @staticmethod
-    def check_n_edge(edge):
-        if edge is not None and not isinstance(edge, int):
-            raise Exception("shape should be None or an integer")
-
-    def set_shape(self, shape):
-        """ sets self.N """
-        self.N = list(shape)
-        self.check_n_edge(self.N[0])
-        for N in self.N[1:-1]:
-            if not isinstance(N, int):
-                raise Exception("shape interior must only be integers")
-        self.check_n_edge(self.N[-1])
-
-    @staticmethod
-    def to_tensor(val):
+    def to_tensor(self, val):
         if isinstance(val, np.ndarray):
-            try:
-                ret = torch.from_numpy(val).cuda().to(torch.float)
-            except RuntimeError:
-                ret = torch.from_numpy(val).to(torch.float)
+            ret = torch.from_numpy(val)
         elif isinstance(val, list):
             ret = torch.Tensor(val)
         else:
             ret = val
-        return ret
-
-    def normalize(self, x, y):
-        # TODO
-        return x, y
+        if self._cuda:
+            return ret.cuda().double()
+        else:
+            return ret.double()
 
     def fit(self, x, y, verbose=False, iterations=None):
         # x.shape = (n_samples, m_features)
         # y.shape = (n_samples, k_targets)
-        # will change shape of weights matrix if sizes aren't as expected
+        # prep x, y and nn
         if iterations is None:
             iterations = self._default_fit_iterations
         x = self.to_tensor(x)
         y = self.to_tensor(y)
+        if self.nn is None:
+            self.init_net(in_layer=x.size()[1], out_layer=y.size()[1])
 
-        x, y = self.normalize(x, y)
-
-        self.init_net(in_layer=x.size()[1], out_layer=y.size()[1])
         report_every = iterations//10
         for i in range(iterations):
-            y_out = self.net.forward(x)
-            self.optimizer.zero_grad()
+            # forward pass
+            y_out = self.nn(x)
             loss = self.criterion(y_out, y)
-            loss.backward(retain_graph=True)
+
+            # backward
+            self.optimizer.zero_grad()
+            loss.backward()
             self.optimizer.step()
+
+            # report
             if verbose and iterations > 10 and i % report_every == 0:
                 print('iterations: {}; error: {}'.format(i, loss))
         self._is_trained = True
-        return x, y
+        return x, y  # give formatted x, y
 
     def predict(self, x):
         # x.shape = (n_samples, m_features)
         x = self.to_tensor(x)
-        return self.net.forward(x).detach().numpy()
+        return self.nn(x).detach().numpy()
 
     def init_net(self, in_layer=None, out_layer=None):
-        if self.N[0] is None and in_layer is not None:
-            self.N[0] = in_layer
-        if self.N[-1] is None and out_layer is not None:
-            self.N[-1] = out_layer
-        if self.net is not None or self.N[0] is None or self.N[-1] is None:
+        if self.shape[0] is None and in_layer is not None:
+            self.shape[0] = in_layer
+        if self.shape[-1] is None and out_layer is not None:
+            self.shape[-1] = out_layer
+        if self.nn is not None or self.shape[0] is None or self.shape[-1] is None:
             return  # can't or already initialized
-        layers = [nn.Linear(self.N[0], self.N[1])]
-        for i in range(2, len(self.N)):
+
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        layers = [torch.nn.Linear(self.shape[0], self.shape[1])]
+        for i in range(2, len(self.shape)):
             layers.append(self.h())
-            layers.append(nn.Linear(self.N[i-1], self.N[i]))
-        self.net = nn.Sequential(*layers)
-        self.criterion = nn.MSELoss()
-        self.optimizer = self.optim(self.net.parameters(), lr=self.mu)
+            layers.append(torch.nn.Linear(self.shape[i-1], self.shape[i]))
+        self.nn = torch.nn.Sequential(*layers).to(device).double()
+        self.criterion = torch.nn.MSELoss()
+        self.optimizer = self.optim(self.nn.parameters(), lr=self.mu)
