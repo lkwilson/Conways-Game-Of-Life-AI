@@ -6,7 +6,7 @@ import numpy as np
 
 class Model:
     def __init__(self, size=None, init_board=None, record=True, verbose=False,
-                 filename=None, load=False, watchers=None):
+                 filename=None, load=False, watchers=None, mutate_density=0.5):
         """
         Constructing:
             Initially, the model is inactive.
@@ -65,6 +65,8 @@ class Model:
         self.filename = filename
         self.watchers = []
         self.active = False
+
+        self._mutate_density = mutate_density
 
         if not load or not self.load():
             self.build(init_board, size)
@@ -197,14 +199,14 @@ class Model:
         else:
             self.load_iter(self.index + 1)
 
-    def load_iter(self, n):
+    def load_iter(self, n=None):
         """ Loads iteration n, before the nth step, record[n] """
         self.assert_active()
         if not self.record:
             return
 
-        if n >= len(self.base_record):
-            n = len(self.base_record) - 1
+        if n is None or n >= len(self.base_record):
+            n = len(self.base_record)-1
         elif n < 0:
             n = 0
 
@@ -220,6 +222,10 @@ class Model:
     def invert(self):
         self.assert_active()
         self.flip(np.ones(self.size, dtype=bool))
+
+    def mutate(self):
+        """ Apply random flip map """
+        self.flip(np.random.rand(self.size) < self._mutate_density)
 
     # io
     def presave(self):

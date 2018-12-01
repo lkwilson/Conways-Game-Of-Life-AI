@@ -36,20 +36,18 @@ class RL:
                 shape[0] = self._problem.get_key_dim()
                 shape[-1] = 1
             self._q = NN(shape, mu=mu, h=h, optim=optim)
-    
-        def get_value(self, action=None, key=None):
-            if key is None:
-                key = self._problem.key(action)
-            return float(self._q.predict(key))
-    
-        def choose_best_action(self, actions=None, explore=False):
+
+        def get_problem(self):
+            return self._problem
+
+        def choose_best_action(self, actions=None, explore=False, epsilon=None, verbose=False):
             if actions is None:
                 actions = self._problem.actions()
-            if explore:
-                epsilon = self._epsilon
-            else:
+            if not explore:
                 epsilon = 0.0
-    
+            elif epsilon is None:
+                epsilon = self._epsilon
+
             if np.random.rand() < epsilon:
                 action = actions[np.random.randint(len(actions))]
                 key = self._problem.key(action)
@@ -58,9 +56,12 @@ class RL:
                 keys = [self._problem.key(action) for action in actions]
                 values = self._q.predict(keys)
                 best_index = self._argbest(values)
+                if verbose:
+                    print(actions, values, best_index)
                 return actions[best_index], values[best_index]
     
-        def train(self, batches=None, batch_size=None, max_steps=None, max_steps_reward=None, replay_count=None, iterations=None, epsilon=None):
+        def train(self, batches=None, batch_size=None, max_steps=None, max_steps_reward=None,
+                  replay_count=None, iterations=None, epsilon=None):
             if batches is None:
                 batches = self._batches
             if batch_size is None:
@@ -119,7 +120,7 @@ class RL:
                     if self._verbose:
                         if rep % 10 == 0 or rep == batch_size - 1:
                             report = 'batch={:d} rep={:d} epsilon={:.3f} steps={:d}'
-                            print(report.format(batch, repk, self._epsilon, int(step)))
+                            print(report.format(batch, repk, self._epsilon, int(steps)))
 
                 samples = np.array(samples)
                 x = samples[:, :-2]  # state-action pairs

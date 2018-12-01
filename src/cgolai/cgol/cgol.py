@@ -86,7 +86,7 @@ class Cgol:
 
     def tick(self):
         self.log('model tick')
-        self.step()
+        self.forward()
 
     def get_model(self):
         return self.model
@@ -110,6 +110,17 @@ class Cgol:
 
     def forward(self):
         self.model.forward()
+
+    def mutate(self):
+        self.model.mutate()
+
+    def goto_start(self):
+        if self.model.record:
+            self.model.load_iter(0)
+
+    def goto_end(self):
+        if self.model.record:
+            self.model.load_iter()
 
     def save(self):
         self.model.save()

@@ -37,3 +37,10 @@ class ProblemNN(Problem, ABC):
     def get_key_dim(self):
         """ Returns the length of the state-action key """
         pass
+
+    @staticmethod
+    def ohe(length):
+        # only needed here and this method may never be called
+        import numpy as np
+        temp = np.array(range(length))
+        return [np.array(temp == i, dtype=float).tolist() for i in range(length)]

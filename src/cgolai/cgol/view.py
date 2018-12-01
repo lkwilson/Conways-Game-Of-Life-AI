@@ -80,6 +80,9 @@ class View:
             pygame.K_s: self.save,
             pygame.K_o: self.open,
             pygame.K_i: self.invert,
+            pygame.K_m: self.mutate,
+            pygame.K_0: self.goto_start,
+            pygame.K_9: self.goto_end,
         }
         self.event_map = {
             pygame.QUIT: self.quit,
@@ -100,12 +103,16 @@ class View:
         print('up/k - speed up iteration')
         print('down/j - speed down iteration')
         print('c - clear cells')
-        print('r - reset / undo flips')
+        print('r - undo flips (reset)')
         print('n - generate next iteration')
         print('s - save iterations')
         print('o - open iterations')
         print('i - invert cells')
+        print('m - randomize cells (mutate)')
+        print('0 - go to first iteration cells')
+        print('9 - go to first iteration cells')
         # TODO: RAND
+        # TODO: BEGIN / END
 
     @staticmethod
     def color(r=0, g=0, b=0, a=None, hex_val=None):
@@ -271,6 +278,15 @@ class View:
 
     def invert(self, event):
         self.ctrl.invert()
+
+    def mutate(self, event):
+        self.ctrl.mutate()
+
+    def goto_start(self, event):
+        self.ctrl.goto_start()
+
+    def goto_end(self, event):
+        self.ctrl.goto_end()
 
     def save(self, event):
         self.ctrl.save()
