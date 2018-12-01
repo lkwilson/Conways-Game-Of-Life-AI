@@ -6,7 +6,7 @@ install:
 	cd .. && make install &>/dev/null
 
 generate: install
-	python3 train_nn.py -f data.bat
+	python3 train_nn.py
 
 load: install
-	python3 -m cgolai.cgol -f data.bat
+	echo python3 -m cgolai.cgol -f {the file}

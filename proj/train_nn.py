@@ -5,14 +5,72 @@ from cgolai.cgol import Model, CgolProblem
 from cgolai.ai import RL
 
 
-def run(filename):
-    rl = train()
-    test_res, base_res = report(rl, filename)
-    print_report(test_res, base_res, full=True)
+def run():
+    LIFE = True  # for visuals
+    D___ = False
+    names = []
+    init_flips = []
+    rnd_flips = []
+
+    names.append("static flip flop 4x4")
+    init_flips.append(
+        np.array([
+            [D___, LIFE, D___, D___],
+            [LIFE, D___, D___, LIFE],
+            [D___, D___, D___, D___],
+            [D___, D___, D___, D___],
+        ]))
+    rnd_flips.append(None)
+
+    sizes = [(4, 4), (5, 10), (10, 10), (20, 20), (50, 50), (60, 80)]
+    densities = [.25, .5, .75]
+    for size in sizes:
+        for density in densities:
+            names.append("same random flip of size {}x{} and density {}".format(*size, density))
+            init_flips.append(np.random.rand(*size)<density)
+            rnd_flips.append(None)
+
+            names.append("new random flip of size {}x{} and density {}".format(*size, density))
+            init_flips.append(None)
+            rnd_flips.append(size)
+    experiments = zip(names, init_flips, rnd_flips)
+
+    for experiment in experiments:
+        name = experiment[0]
+        rl = train(init_flip=experiment[1], size=experiment[2])
+        summary(name, rl)
+
+
+def train(init_flip=None, size=None, verbose=False):
+    if init_flip is not None:
+        size = init_flip.shape
+    model = Model(size=size)
+    problem = CgolProblem(model, init_flip=init_flip)
+    rl = RL(problem, shape=[None, *(3*[problem.length]), None], verbose=verbose,
+            mu=0.01,
+            batches=25,
+            batch_size=50,
+            max_steps=1000,
+            epsilon_init=1.0,
+            epsilon_decay_factor=0.9,
+            epsilon_min=0.01,
+            )
+    rl.train(iterations=100)
+    return rl
+
+
+def summary(header, rl, filename=False, full=False):
+    print('-~'*30, end='-\n')
+    print('Title:', header)
+    if filename:
+        prefix = 'result {}.dat'.format(header).replace(' ', '_').lower()
+    else:
+        prefix = None
+    test_res, base_res = report(rl, prefix)
+    print_report(test_res, base_res, full=full)
 
 
 def print_report(test_res, base_res, full=False):
-    print()
     print('base')
     total_steps = 0
     total_rewards = 0
@@ -31,7 +89,6 @@ def print_report(test_res, base_res, full=False):
     print('total steps:', total_steps)
     print('total rewards:', total_rewards)
     print('total maxouts:', total_maxouts)
-    print()
 
     print()
     print('test')
@@ -55,19 +112,22 @@ def print_report(test_res, base_res, full=False):
     print()
 
 
-def report(rl, filename):
+def report(rl, filename=None):
     model = rl.get_problem().model
-    model.set_filename("train_{}".format(filename))
-    model.save()
+    if filename:
+        model.set_filename("train_{}".format(filename))
+        model.save()
 
     trials = 10
     test_res = measure(rl, model, trials, random=False)
-    model.set_filename("test_{}".format(filename))
-    model.save()
+    if filename:
+        model.set_filename("test_{}".format(filename))
+        model.save()
 
     base_res = measure(rl, model, trials, random=True)
-    model.set_filename("base_{}".format(filename))
-    model.save()
+    if filename:
+        model.set_filename("base_{}".format(filename))
+        model.save()
     return test_res, base_res
 
 
@@ -95,30 +155,6 @@ def measure(rl, model, trials, random=False, max_length=100):
             rewards.append(reward)
         trial_results.append((steps, rewards, not problem.is_terminal()))
     return trial_results
-
-
-def train():
-    verbose = True
-    LIFE = True  # for visuals
-    D___ = False
-    init_flip = np.array([
-        [D___, LIFE, D___, D___],
-        [LIFE, D___, D___, LIFE],
-        [D___, D___, D___, D___],
-        [D___, D___, D___, D___],
-    ])
-    model = Model(size=init_flip.shape)
-    problem = CgolProblem(model, init_flip=init_flip)
-    rl = RL(problem, shape=[None, *(3*[problem.length]), None], verbose=verbose,
-            mu=0.01,
-            batches=100,
-            batch_size=50,
-            max_steps=1000,
-            # epsilon_decay_factor=0.9,
-            # epsilon_init=0.5,
-            )
-    rl.train(iterations=100)
-    return rl
 
 
 def parse_args(config_opts, config_defaults):
@@ -151,9 +187,4 @@ def parse_args(config_opts, config_defaults):
 
 
 if __name__ == '__main__':
-    config_opts = 'f:'
-    config_defaults = {
-        '-f': ('filename', ),
-    }
-    config = parse_args(config_opts, config_defaults)
-    run(**config)
+    run()
