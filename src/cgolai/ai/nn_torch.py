@@ -77,10 +77,12 @@ class NNTorch:
         self._is_trained = True
         return x, y  # give formatted x, y
 
-    def predict(self, x):
+    def predict(self, x, numpy=True):
         # x.shape = (n_samples, m_features)
         x = self.to_tensor(x)
-        return self.nn(x).detach().numpy()
+        if not numpy:
+            return x
+        return np.array(self.nn(x).detach())
 
     def init_net(self, in_layer=None, out_layer=None):
         if self.shape[0] is None and in_layer is not None:

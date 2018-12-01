@@ -122,6 +122,8 @@ class RL:
                             report = 'batch={:d} rep={:d} epsilon={:.3f} steps={:d}'
                             print(report.format(batch, repk, self._epsilon, int(steps)))
 
+                #if not isinstance(samples, np.ndarray):
+                    #print(samples)
                 samples = np.array(samples)
                 x = samples[:, :-2]  # state-action pairs
                 t = samples[:, -2:-1] + samples[:, -1:]  # reward + q_val
