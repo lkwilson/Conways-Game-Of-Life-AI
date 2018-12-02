@@ -83,7 +83,15 @@ Notable components are the following:
 
 ## Installing `cgolai`
 
-`python3 -m pip install .`
+```
+git clone https://github.com/larkwt96/cgolai.git
+cd cgolai
+python3 -m pip install .
+```
+
+or without cloning 
+
+`python3 -m pip install git+git://github.com/larkwt96/cgolai.git`
 
 ## Testing
 
