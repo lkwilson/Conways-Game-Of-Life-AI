@@ -62,6 +62,14 @@ Notable components are the following:
 
 `python3 -m cgolai.cgol [options]`
 
+### Options
+
+* `-c` will print the controlls to control the GUI.
+* `-v` will print information to the console (mostly debugging information)
+* `-f {save file}` the save file will be loaded if it exists.
+* `-w {grid width}` width of Cgol toroid grid
+* `-h {grid height}` height of the Cgol toroid grid
+
 ## Directory Layout
 
 * Assignments are stored in the `assign` directory. Each has a Jupyter Notebook
@@ -76,14 +84,6 @@ Notable components are the following:
 ## Installing `cgolai`
 
 `python3 -m pip install .`
-
-### Options
-
-* `-c` will print the controlls to control the GUI.
-* `-v` will print information to the console (mostly debugging information)
-* `-f {save file}` the save file will be loaded if it exists.
-* `-w {grid width}` width of Cgol toroid grid
-* `-h {grid height}` height of the Cgol toroid grid
 
 ## Testing
 
