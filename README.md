@@ -25,12 +25,12 @@ assist with the final project.
 
 # Final Project
 
-**Reinforcement Learning to control Conway's Game of Life**
+## Reinforcement Learning to control Conway's Game of Life
 
-*I created a reinforcement agent capable of learning to control a mutated form
+**I created a reinforcement agent capable of learning to control a mutated form
 of Conway's Game of Life (Cgol). My package, `cgolai`, contains a built Cgol
 gui, PyTorch Nueral Network, and Deep RL agent with Neural Network as
-Q-function. See Report.ipynb for more information.*
+Q-function. See Report.ipynb for more information.**
 
 In this context, the "actions" the RL agent performs is reviving or eliminating
 cells within the grid at any iteration. This is different from the original in
