@@ -76,6 +76,8 @@ class Model:
                 self.watch(watcher)
 
     def build(self, init_board, size):
+        if self.verbose:
+            print('building board: init_board', init_board, 'size', size)
         if init_board is None:
             if size is None:
                 return

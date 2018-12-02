@@ -47,7 +47,7 @@ if __name__ == "__main__":
         '-v': ('verbose', True),
         '-c': ('print_controls', True),
         '-f': ('filename', ),
-        '-w': ('width', 60, int),
+        '-w': ('width', 80, int),
         '-h': ('height', 60, int),
     }
     config = _parse_args(config_opts, config_defaults)

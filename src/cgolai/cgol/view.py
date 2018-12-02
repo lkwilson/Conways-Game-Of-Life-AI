@@ -216,6 +216,8 @@ class View:
 
     def render_cells(self):
         model = self.ctrl.get_model()
+        if self.verbose:
+            print('model index', model.index)
         flip_map = model.get_flip_map()
         for row in range(model.size[0]):
             for col in range(model.size[1]):

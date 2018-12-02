@@ -34,7 +34,7 @@ class Cgol:
         # model config
         width = config.get('width', 80)
         height = config.get('height', 60)
-        board_size = config.get('board_size', (width, height))
+        board_size = config.get('board_size', (height, width))
         self.verbose = config.get('verbose', False)
         filename = config.get('filename', None)
         self.model = Model(
