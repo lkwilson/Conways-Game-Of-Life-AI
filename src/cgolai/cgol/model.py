@@ -227,7 +227,7 @@ class Model:
 
     def mutate(self):
         """ Apply random flip map """
-        self.flip(np.random.rand(self.size) < self._mutate_density)
+        self.flip(np.random.rand(*self.size) < self._mutate_density)
 
     # io
     def presave(self):
