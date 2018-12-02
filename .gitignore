@@ -7,3 +7,4 @@ notebookcode.py
 play/
 .idea/
 *.dat
+venv/

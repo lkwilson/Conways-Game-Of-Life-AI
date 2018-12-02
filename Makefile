@@ -1,4 +1,4 @@
-.PHONY: run debug test install clean
+.PHONY: run debug test install clean build
 run:
 	cd src && python3 -m cgolai.cgol
 
@@ -13,3 +13,9 @@ install:
 
 clean:
 	rm -f src/test/*.dat
+
+REPORT_OUT="Wilson-Final-Project.tar"
+REPORT_FILES="Report.ipynb ReportWritingComponent.docx"
+FILES="src proj README.md MANIFEST.in setup.py ${REPORT_FILES}"
+build:
+	tar cjf ${REPORT_OUT} ${FILES}
