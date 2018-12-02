@@ -1,4 +1,4 @@
-# cs440 - Introduction to Artificial Intelligence
+# CS 440 - Introduction to Artificial Intelligence
 
 In this repo are all the assignments I've worked on over the semester for CS
 440.
