@@ -11,6 +11,9 @@ test:
 install:
 	python3 -m pip install .
 
+install_updatable:
+	python3 -m pip install git+git://github.com/larkwt96/cgolai.git
+
 clean:
 	rm -f src/test/*.dat
 
