@@ -1,7 +1,8 @@
 # cs440 - Introduction to Artificial Intelligence
 
 In this repo are all the assignments I've worked on over the semester for CS
-440.
+440. The most notable content in this repo is my Conway's Game of Life and
+Reinforcement Learning AI package--`cgolai`.
 
 ## Assignments:
 
