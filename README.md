@@ -12,7 +12,7 @@ assist with the final project.
 * Analysis Files: `proj/run_report.py`
 * Final Project Report: `Report.ipynb`
 * References Summary (per Honors Option Requirement): `ReportWritingComponent.docx`
-* See [Final Project](#final-project-reinforcement-learning-to-control-conways-game-of-life)
+* See [Final Project](#final-project)
 
 ## Assignments:
 
