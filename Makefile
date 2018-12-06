@@ -17,8 +17,8 @@ install_updatable:
 clean:
 	rm -f src/test/*.dat
 
-REPORT_OUT="Wilson-Final-Project.tar"
-REPORT_FILES="Report.ipynb ReportWritingComponent.docx"
-FILES="src proj README.md MANIFEST.in setup.py ${REPORT_FILES}"
+REPORT_OUT=Wilson-Final-Project.tar
+REPORT_FILES=Report.ipynb ReportWritingComponent.docx
+FILES=src proj README.md MANIFEST.in setup.py ${REPORT_FILES}
 build:
 	tar cjf ${REPORT_OUT} ${FILES}
