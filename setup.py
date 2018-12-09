@@ -5,7 +5,7 @@ from distutils.core import setup
 
 setup(
     name="cgolai",
-    version='1.9'
+    version='1.9',
     description="AI for Conway's Game of Life",
     author='Lucas Wilson',
     author_email='lkwilson96@gmail.com',
