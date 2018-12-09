@@ -60,7 +60,9 @@ Notable components are the following:
 
 ## Running Cgol AI GUI
 
-`python3 -m cgolai.cgol [options]`
+```
+python3 -m cgolai.cgol [options]
+```
 
 ### Options
 
@@ -91,8 +93,12 @@ python3 -m pip install .
 
 or without cloning 
 
-`python3 -m pip install git+git://github.com/larkwt96/cgolai.git`
+```
+python3 -m pip install git+git://github.com/larkwt96/cgolai.git
+```
 
 ## Testing
 
-`python3 -m unittest discover -s src`
+```
+python3 -m unittest discover -s src
+```

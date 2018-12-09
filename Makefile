@@ -11,11 +11,14 @@ test:
 install:
 	python3 -m pip install .
 
+install_updatable:
+	python3 -m pip install git+git://github.com/larkwt96/cgolai.git
+
 clean:
 	rm -f src/test/*.dat
 
-REPORT_OUT="Wilson-Final-Project.tar"
-REPORT_FILES="Report.ipynb ReportWritingComponent.docx"
-FILES="src proj README.md MANIFEST.in setup.py ${REPORT_FILES}"
+REPORT_OUT=Wilson-Final-Project.tar
+REPORT_FILES=Report.ipynb ReportWritingComponent.docx
+FILES=src proj README.md MANIFEST.in setup.py ${REPORT_FILES}
 build:
 	tar cjf ${REPORT_OUT} ${FILES}
