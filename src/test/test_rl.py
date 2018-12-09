@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from cgolai.cgol import Model, CgolProblem
@@ -21,6 +22,7 @@ class TestRL(unittest.TestCase):
         self.batch_size = 20
         self.replay_count = 0
         self.iterations = 10
+        self.filename = os.path.join('src', 'test', 'test_rl_model.dat')
 
     def test_cgolai_compat(self):
         verbose = False
@@ -70,6 +72,100 @@ class TestRL(unittest.TestCase):
                  replay_count=self.replay_count,
                  iterations=self.iterations,
                  epsilon=self.epsilon_init)
+
+        # test it
+        steps = 0
+        self.problem.reset()
+        while not self.problem.is_terminal():
+            action, q_val = rl.choose_best_action(explore=False)
+            if self.verbose:
+                print('action:', action, 'q_val:', q_val)
+            self.problem.do(action)
+            steps += 1
+            if steps > 100:
+                break
+        if self.verbose and steps != 7:
+            print(steps)
+        if full_test:
+            self.assertEqual(steps, 7)
+
+    def test_rl_save_load(self):
+        # build and train
+        full_test = False
+        if not full_test:
+            self.batch_size = 5
+            self.batches = 5
+            self.replay_count = 5
+
+        rl = RL(self.problem,
+                [None, *self.inner, None],
+                verbose=self.verbose_model,
+                epsilon_decay_factor=self.epsilon_decay_factor,
+                epsilon_init=self.epsilon_init,
+                epsilon_min=self.epsilon_min,
+                stochastic=self.stochastic,
+                mu=self.mu,
+                discount_factor=self.discount_factor,
+                batches=self.batches,
+                batch_size=self.batch_size,
+                replay_count=self.replay_count,
+                h=None,
+                optim=None,
+                filename=self.filename)
+        rl.train(batches=self.batches,
+                 batch_size=self.batch_size,
+                 replay_count=self.replay_count,
+                 iterations=self.iterations,
+                 epsilon=self.epsilon_init)
+        rl.save()
+        rl.load()
+
+        # test it
+        steps = 0
+        self.problem.reset()
+        while not self.problem.is_terminal():
+            action, q_val = rl.choose_best_action(explore=False)
+            if self.verbose:
+                print('action:', action, 'q_val:', q_val)
+            self.problem.do(action)
+            steps += 1
+            if steps > 100:
+                break
+        if self.verbose and steps != 7:
+            print(steps)
+        if full_test:
+            self.assertEqual(steps, 7)
+
+    def test_rl_save_load_new_rl(self):
+        # build and train
+        full_test = False
+        if not full_test:
+            self.batch_size = 5
+            self.batches = 5
+            self.replay_count = 5
+
+        rl = RL(self.problem,
+                [None, *self.inner, None],
+                verbose=self.verbose_model,
+                epsilon_decay_factor=self.epsilon_decay_factor,
+                epsilon_init=self.epsilon_init,
+                epsilon_min=self.epsilon_min,
+                stochastic=self.stochastic,
+                mu=self.mu,
+                discount_factor=self.discount_factor,
+                batches=self.batches,
+                batch_size=self.batch_size,
+                replay_count=self.replay_count,
+                h=None,
+                optim=None,
+                filename=self.filename)
+        rl.train(batches=self.batches,
+                 batch_size=self.batch_size,
+                 replay_count=self.replay_count,
+                 iterations=self.iterations,
+                 epsilon=self.epsilon_init)
+        rl.save()
+        rl = RL(self.problem, filename=self.filename, load=True)
 
         # test it
         steps = 0

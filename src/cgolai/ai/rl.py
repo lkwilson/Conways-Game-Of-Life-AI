@@ -36,13 +36,13 @@ class RL:
         self._replay_count = replay_count
         self._filename = filename
         self._q = None
-        if shape[0] is None or shape[-1] is None:
-            shape[0] = self._problem.get_key_dim()
-            shape[-1] = 1
 
         if load:
             self.load()
         else:
+            if shape[0] is None or shape[-1] is None:
+                shape[0] = self._problem.get_key_dim()
+                shape[-1] = 1
             self._q = NN(shape=shape, mu=mu, h=h, optim=optim, filename=filename, load=False)
 
     def get_problem(self):
@@ -79,7 +79,7 @@ class RL:
             filename = self._filename
         if filename is not None:
             if self._q is None:
-                self._q = NN.load_model(filename)
+                self._q = NN(filename=self._filename, load=True)
             else:
                 self._q.load(filename)
 

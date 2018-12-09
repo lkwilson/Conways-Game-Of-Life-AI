@@ -22,6 +22,9 @@ class NNTorch:
                 raise Exception("must specify file to load from or a shape to build NN")
         else:
             self.shape = list(shape)
+            for n in self.shape[1:-1]:
+                if not isinstance(n, int):
+                    raise TypeError("expected int for shape")
         self.mu = mu
         self.h = h if h is not None else torch.nn.ReLU
         self.optim = optim if optim is not None else torch.optim.Adam
@@ -31,10 +34,6 @@ class NNTorch:
         self._default_fit_iterations = 1000
         self._cuda = torch.cuda.is_available()
         self._filename = filename
-
-        for n in self.shape[1:-1]:
-            if not isinstance(n, int):
-                raise TypeError("expected int for shape")
 
         # hyper params
         self._is_trained = False
@@ -50,7 +49,7 @@ class NNTorch:
             torch.save(self.nn, filename)
 
     @staticmethod
-    def load_model(filename):
+    def _load_model(filename):
         model = torch.load(filename)
         model.eval()
         return model
@@ -59,7 +58,7 @@ class NNTorch:
         if filename is None:
             filename = self._filename
         if filename is not None:
-            self.nn = self.load_model(filename)
+            self.nn = self._load_model(filename)
             self.post_load()
 
     def is_trained(self):
