@@ -9,15 +9,16 @@ density = .2
 
 def run():
     title = "v2"
-    size = 5
-    rl = train(size=(size, size), verbose=True, batches=500, batch_size=30)
+    size = 10
+    batches = 500
+    rl = train(size=(size, size), verbose=True, batches=batches, batch_size=30)
     rl.save(major_name+title+"_nn_model.dat")
     summary(title, rl, full=True, trials=10)
 
 
 def train(size=(4, 4), verbose=False, batches=50, batch_size=20):
     model = Model(size=size)
-    problem = CgolProblemV2(model, init_flip=None, density=density, high_density=1.0-density)
+    problem = CgolProblemV2(model, init_flip=None, density=density, high_density=1.0-density, pop_record_size=10)
     layers = [problem.length+problem.key_dim, problem.length + problem.cols + problem.rows, problem.length // 2]
     rl = RL(problem, shape=[None, *layers, None], verbose=verbose,
             mu=0.01,
@@ -27,7 +28,7 @@ def train(size=(4, 4), verbose=False, batches=50, batch_size=20):
             epsilon_init=1.0,
             epsilon_decay_factor=0.9,
             epsilon_min=0.01,
-            # replay_count=5,
+            #replay_count=2,
             )
     rl.train(iterations=100)
     return rl
@@ -51,18 +52,18 @@ def report(rl, filename=None, trials=10):
 
     test_res = measure(rl, init_flips, random=False)
     if filename:
-        model.set_filename(filename.format('test'))
+        model.set_filename(filename.format('rlagent'))
         model.save()
 
     base_res = measure(rl, init_flips, random=True)
     if filename:
-        model.set_filename(filename.format('base'))
+        model.set_filename(filename.format('control'))
         model.save()
     return test_res, base_res
 
 
 def print_report(test_res, base_res, full=False):
-    print('base')
+    print('control')
     total_steps = 0
     total_rewards = 0
     total_maxouts = 0
@@ -73,7 +74,7 @@ def print_report(test_res, base_res, full=False):
         if maxout:
             total_maxouts += 1
         if full:
-            print('base trial:', i, end='; ')
+            print('control trial:', i, end='; ')
             print('steps:', steps, end='; ')
             print('reward:', reward, end='; ')
             print('maxout:', maxout)
@@ -82,7 +83,7 @@ def print_report(test_res, base_res, full=False):
     print('total maxouts:', total_maxouts)
 
     print()
-    print('test')
+    print('rl agent')
     total_steps = 0
     total_rewards = 0
     total_maxouts = 0
