@@ -9,14 +9,22 @@ class NNTorch:
 
     I used it to understand pytorch, and my NN has more features than what they present.
     """
-    def __init__(self, shape, mu=0.01, h=None, optim=None):  # toss args
+    def __init__(self, shape=None, mu=0.01, h=None, optim=None, filename=None, load=False):  # toss args
         """
         Shape is a listable object of positive integers specifying how many
         nodes are in each layer. If input or output layer is unknown, they can
         be of type None. Activation functions default to relu for hidden layers
         and no activation function on the output layer.
         """
-        self.shape = list(shape)
+        if shape is None:
+            self.shape = None
+            if filename is None:
+                raise Exception("must specify file to load from or a shape to build NN")
+        else:
+            self.shape = list(shape)
+            for n in self.shape[1:-1]:
+                if not isinstance(n, int):
+                    raise TypeError("expected int for shape")
         self.mu = mu
         self.h = h if h is not None else torch.nn.ReLU
         self.optim = optim if optim is not None else torch.optim.Adam
@@ -25,14 +33,33 @@ class NNTorch:
         self.optimizer = None
         self._default_fit_iterations = 1000
         self._cuda = torch.cuda.is_available()
-
-        for n in self.shape[1:-1]:
-            if not isinstance(n, int):
-                raise TypeError("expected int for shape")
+        self._filename = filename
 
         # hyper params
         self._is_trained = False
-        self.init_net()
+        if load:
+            self.load()
+        else:
+            self.init_net()
+
+    def save(self, filename=None):
+        if filename is None:
+            filename = self._filename
+        if filename is not None:
+            torch.save(self.nn, filename)
+
+    @staticmethod
+    def _load_model(filename):
+        model = torch.load(filename)
+        model.eval()
+        return model
+
+    def load(self, filename=None):
+        if filename is None:
+            filename = self._filename
+        if filename is not None:
+            self.nn = self._load_model(filename)
+            self.post_load()
 
     def is_trained(self):
         return self._is_trained
@@ -97,6 +124,13 @@ class NNTorch:
         for i in range(2, len(self.shape)):
             layers.append(self.h())
             layers.append(torch.nn.Linear(self.shape[i-1], self.shape[i]))
+
         self.nn = torch.nn.Sequential(*layers).to(device).double()
+        self.post_load()
+
+    def post_load(self):
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.nn = self.nn.to(device).double()
+
         self.criterion = torch.nn.MSELoss()
         self.optimizer = self.optim(self.nn.parameters(), lr=self.mu)
